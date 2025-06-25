@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "login/create-login-user.h"
 
 int main()
 {
@@ -13,16 +14,26 @@ int main()
     printf("            3. Exit\n");
     printf("         Enter your choice(1 or 2): ");
     scanf("%d", &choice);
-    if (choice == 1) {
-        printf("You have chosen to log in as Staff.\n");
-        // Here you would typically call a function to handle staff login
-    } else if (choice == 2) {
+    if (choice == 1)
+    {
+        int result = loginStaff("IDTB110310", "admin321");
+        if (result == 0)
+        {
+            printf("Staff login failed. Please check your credentials.\n");
+        }
+    }
+    else if (choice == 2)
+    {
         printf("You have chosen to log in as Customer.\n");
         // Here you would typically call a function to handle customer login
-    } else if (choice == 3) {
+    }
+    else if (choice == 3)
+    {
         printf("Exiting the system. Goodbye!\n");
         return 0;
-    } else {
+    }
+    else
+    {
         printf("Invalid choice. Please restart the program and choose either 1 or 2.\n");
         return 1;
     }
