@@ -3,14 +3,28 @@
 int main()
 {
     int choice;
+
     printf("-------------------------------------------------------------\n");
-    printf("        Welcome to MEXISCADTEL management system\n");
+    printf("         Welcome to MEXISCADTEL management system\n");
     printf("-------------------------------------------------------------\n");
-    printf("        Are you login as:\n");
-    printf("          1. Staff\n");
-    printf("          2. Customer\n");
-    printf("        Enter your choice:\n");
+    printf("         Are you logging in as:\n");
+    printf("            1. Staff\n");
+    printf("            2. Customer\n");
+    printf("            3. Exit\n");
+    printf("         Enter your choice(1 or 2): ");
     scanf("%d", &choice);
-    printf("-------------------------------------------------------------\n");
+    if (choice == 1) {
+        printf("You have chosen to log in as Staff.\n");
+        // Here you would typically call a function to handle staff login
+    } else if (choice == 2) {
+        printf("You have chosen to log in as Customer.\n");
+        // Here you would typically call a function to handle customer login
+    } else if (choice == 3) {
+        printf("Exiting the system. Goodbye!\n");
+        return 0;
+    } else {
+        printf("Invalid choice. Please restart the program and choose either 1 or 2.\n");
+        return 1;
+    }
     return 0;
 }
