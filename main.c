@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "login/create-login-user.h"
 
 int main()
@@ -8,7 +10,7 @@ int main()
     printf("-------------------------------------------------------------\n");
     printf("         Welcome to MEXISCADTEL management system\n");
     printf("-------------------------------------------------------------\n");
-    printf("         Are you logging in as:\n");
+    printf("         Are you a Staff or Customer:\n");
     printf("            1. Staff\n");
     printf("            2. Customer\n");
     printf("            3. Exit\n");
@@ -17,19 +19,89 @@ int main()
     if (choice == 1)
     {
         printf("------You have chosen to log in as Staff.------\n");
-        printf("    Please enter your Staff ID and password.\n");
-        printf("    Staff ID: ");
-        char staffID[100];
-        scanf("%s", staffID);
-        printf("    Password: ");
-        char password[100];
-        scanf("%s", password);
-        int loginResult = loginStaff(staffID, password);
+        printf("      Do you want to login or sign up.\n");
+        printf("        1. Login\n");
+        printf("        2. Sign up\n");
+        printf("      Enter your choice(1 or 2): ");
+        int loginChoice;
+        scanf("%d", &loginChoice);
+        if (loginChoice == 2)
+        {
+            Staff staff;
+            do
+            {
+                printf("-------------------------------You have chosen to sign up as Staff.-------------------------------\n");
+                printf("    Please enter your Staff ID, password, confirm password, email address, and phone number.\n");
+                printf("        Staff ID: ");
+                scanf("%s", staff.staffID);
+                if (strncmp(staff.staffID, "IDTB11", 6) != 0)
+                {
+                    printf("Invalid Staff ID.\n");
+                    continue;
+                }
+                printf("        Password: ");
+                scanf("%s", staff.password);
+                printf("        Confirm Password: ");
+                scanf("%s", staff.confirmPassword);
+                printf("        Email Address: ");
+                scanf("%s", staff.emailAddress);
+                printf("        Phone Number: ");
+                scanf("%s", staff.phoneNumber);
+            } while (strcmp(staff.password, staff.confirmPassword) != 0);
+            createAccountStaff(staff);
         }
+        else if (loginChoice == 1)
+        {
+            Staff staff;
+            printf("    Please enter your Staff ID and password.\n");
+            printf("    Staff ID: ");
+            scanf("%s", staff.staffID);
+            printf("    Password: ");
+            scanf("%s", staff.password);
+            int loginResult = loginStaff(staff.staffID, staff.password);
+        }
+    }
     else if (choice == 2)
     {
-        printf("You have chosen to log in as Customer.\n");
-        // Here you would typically call a function to handle customer login
+        printf("------You have chosen to log in as Customer.------\n");
+        int loginChoice;
+        printf("      Do you want to login or sign up.\n");
+        printf("        1. Login\n");
+        printf("        2. Sign up\n");
+        printf("      Enter your choice(1 or 2): ");
+        scanf("%d", &loginChoice);
+        if (loginChoice == 2)
+        {
+            User user;
+            do
+            {
+                printf("-------------------------------You have chosen to sign up as Customer.-------------------------------\n");
+                printf("    Please enter your Customer Username, password, confirm password, email address, and phone number.\n");
+                printf("        Username: ");
+                scanf("%s", user.username);
+                printf("        Password: ");
+                scanf("%s", user.password);
+                printf("        Confirm Password: ");
+                scanf("%s", user.confirmPassword);
+                printf("        Email Address: ");
+                scanf("%s", user.emailAddress);
+                printf("        Phone Number: ");
+                scanf("%s", user.phoneNumber);
+            } while (strcmp(user.password, user.confirmPassword) != 0);
+            createAccountUser(user);
+        }
+        else if (loginChoice == 1)
+        {
+            User user;
+            printf("-------------------------------You have chosen to log in as Customer.-------------------------------\n");
+            printf("                        Please enter your Customer Username and Password.\n");
+            printf("                            Username: ");
+            scanf("%s", user.username);
+            printf("                            Password: ");
+            char password[100];
+            scanf("%s", user.password);
+            int loginResult = loginUser(user.username, user.password);
+        }
     }
     else if (choice == 3)
     {
