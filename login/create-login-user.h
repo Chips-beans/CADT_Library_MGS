@@ -1,4 +1,4 @@
-#ifdef create_login_user_h
+#ifndef create_login_user_h
 #define create_login_user_h
 
 int loginUser(const char *username, const char *password);
