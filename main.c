@@ -16,12 +16,16 @@ int main()
     scanf("%d", &choice);
     if (choice == 1)
     {
-        int result = loginStaff("IDTB110310", "admin321");
-        if (result == 0)
-        {
-            printf("Staff login failed. Please check your credentials.\n");
+        printf("------You have chosen to log in as Staff.------\n");
+        printf("    Please enter your Staff ID and password.\n");
+        printf("    Staff ID: ");
+        char staffID[100];
+        scanf("%s", staffID);
+        printf("    Password: ");
+        char password[100];
+        scanf("%s", password);
+        int loginResult = loginStaff(staffID, password);
         }
-    }
     else if (choice == 2)
     {
         printf("You have chosen to log in as Customer.\n");

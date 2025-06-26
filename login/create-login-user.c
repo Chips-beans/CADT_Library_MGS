@@ -5,7 +5,7 @@
 
 int loginUser(const char *username, const char *password)
 {
-    FILE *file = fopen("login-info.txt", "r"); // Open the file in read mode
+    FILE *file = fopen("login/login-info.txt", "r"); // Open the file in read mode
     if (file == NULL)
     {
         printf("Error opening file");
@@ -14,45 +14,33 @@ int loginUser(const char *username, const char *password)
 
     char fileUsername[100];
     char filePassword[100];
-    while (fgets(fileUsername, sizeof(fileUsername), file) != NULL)
+    while (fscanf(file, "%s %s", fileUsername, filePassword) == 2)
     {
-        fgets(filePassword, sizeof(filePassword), file);
-        // Remove newline character from the end of the strings
-        fileUsername[strcspn(fileUsername, "\n")] = 0;
-        filePassword[strcspn(filePassword, "\n")] = 0;
-
-        // Check if the username and password match
         if (strcmp(fileUsername, username) == 0 && strcmp(filePassword, password) == 0)
         {
             printf("Login successful for user: %s\n", username);
             fclose(file);
-
             return 0;
         }
     }
-
+    printf("Login failed for user: %s\n", username);
     fclose(file);
     return 0;
 }
 
 int loginStaff(const char *ID, const char *password)
 {
-    FILE *file = fopen("staff-login-info.txt", "r");
+    FILE *file = fopen("login/staff-login-info.txt", "r");
     if (file == NULL)
     {
         printf("Error opening file");
         return 0;
     }
-
+    
     char fileID[100];
     char filePassword[100];
-    while (fgets(fileID, sizeof(fileID), file) != NULL)
-    {
-        fgets(filePassword, sizeof(filePassword), file);
-        // Remove newline character from the end of the strings
-        fileID[strcspn(fileID, "\n")] = 0;
-        filePassword[strcspn(filePassword, "\n")] = 0;
-
+    while (fscanf(file, "%s %s", fileID, filePassword) == 2)
+    {  
         if (strcmp(fileID, ID) == 0 && strcmp(filePassword, password) == 0)
         {
             printf("Login successful for staff ID: %s\n", ID);
@@ -60,7 +48,7 @@ int loginStaff(const char *ID, const char *password)
             return 0;
         }
     }
-
+    printf("Login failed for staff ID: %s\n", ID);
     fclose(file);
     return 0;
 }
