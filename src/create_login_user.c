@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdbool.h>
 
 void encryptPassword(const char *password, char *encrypted) {
     int i;
@@ -19,13 +19,13 @@ void decryptPassword(const char *encrypted, char *decrypted) {
     decrypted[i] = '\0';
 }
 
-int loginUser(const char *username, const char *password)
+bool loginUser(const char *username, const char *password)
 {
     FILE *file = fopen("login_info.txt", "r"); // Open the file in read mode
     if (file == NULL)
     {
         printf("Error opening file");
-        return 0;
+        return false;
     }
     File fileData;
     
@@ -37,12 +37,12 @@ int loginUser(const char *username, const char *password)
         {
             printf("Login successful for user: %s\n", username);
             fclose(file);
-            return 0;
+            return true;
         }
     }
     printf("Login failed for user: %s\n", username);
     fclose(file);
-    return 0;
+    return false;
 }
 
 int loginStaff(const char *ID, const char *password)

@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "create_login_user.h"
+#include "user_booking.h"
 
 int main()
 {
     int choice;
-    
+
     do
     {
         printf("----------------------------------------------------------------------------------------------------------------------------------------------\n");
@@ -64,7 +66,8 @@ int main()
                 scanf("%s", staff.password);
                 int loginResult = loginStaff(staff.staffID, staff.password);
             }
-            else if (loginChoice == 3) continue;
+            else if (loginChoice == 3)
+                continue;
         }
         else if (choice == 2)
         {
@@ -109,29 +112,30 @@ int main()
                 printf("                                                Password: ");
                 char password[100];
                 scanf("%s", user.password);
-                int loginResult = loginUser(user.username, user.password);
-                
-                if(loginResult == 1){
+                bool loginResult = loginUser(user.username, user.password);
+                if (loginResult)
+                {
                     int userChoice;
-                    do{
-                    printf("Login successful");
-                    printf("Welcome %s", user.username);
-                    printf(" 1. Booking Room");
-                    scanf("%d", &userChoice);
-                    if(userChoice == 1){
-
-                    }
-                    printf(" 2. View Booking");
-                    scanf("%d", &userChoice);
-                    if(userChoice == 2){
-                        
-                    }
-                    printf(" 3. Exit");
-                    scanf("%d", &userChoice);
-                    }while(userChoice != 3);
-
+                    do
+                    {
+                        printf("Welcome %s\n", user.username);
+                        printf(" 1. Booking Room\n");
+                        printf(" 2. View Booking\n");
+                        printf(" 3. Exit\n");
+                        scanf("%d", &userChoice);
+                        getchar();
+                        if (userChoice == 1)
+                        {
+                            bookRoom();
+                        }
+                        if (userChoice == 2)
+                        {
+                        }
+                    } while (userChoice != 3);
                 }
-            }else if (loginChoice == 3) continue;
+            }
+            else if (loginChoice == 3)
+                continue;
         }
         else if (choice == 3)
         {
@@ -144,6 +148,6 @@ int main()
             printf("----------------------------------------------------------------------------------------------------------------------------------------------\n\n\n");
         }
     } while (choice != 3);
-    
+
     return 0;
 }

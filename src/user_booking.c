@@ -1,7 +1,9 @@
+#include "user_booking.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
 
 #define MAX_NAME 100
 #define ROOM_FILE "bookings.txt"
@@ -57,10 +59,8 @@ int getAvailableBookingID() {
     return id;
 }
 
-int main() {
-    char name[MAX_NAME];
-    int single_rooms, double_rooms, nights;
-    int checkin_day, checkin_month, checkin_year;
+int bookRoom() {
+    Booking book;
     float total = 0, upfront = 0;
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
@@ -78,35 +78,35 @@ int main() {
     // Name input
     do {
         printf("Enter your name: ");
-        fgets(name, sizeof(name), stdin);
-        name[strcspn(name, "\n")] = 0;
-        if (!valid_name(name) || strlen(name) == 0)
+        fgets(book.name, sizeof(book.name), stdin);
+        book.name[strcspn(book.name, "\n")] = 0;
+        if (!valid_name(book.name) || strlen(book.name) == 0)
             printf("Invalid name. Try again.\n");
-    } while (!valid_name(name) || strlen(name) == 0);
+    } while (!valid_name(book.name) || strlen(book.name) == 0);
 
     // Room selection
     do {
         printf("Enter number of single rooms: ");
-        scanf("%d", &single_rooms);
+        scanf("%d", &book.single_rooms);
         printf("Enter number of double rooms: ");
-        scanf("%d", &double_rooms);
-        if (single_rooms < 0 || double_rooms < 0 || (single_rooms + double_rooms == 0))
+        scanf("%d", &book.double_rooms);
+        if (book.single_rooms < 0 || book.double_rooms < 0 || (book.single_rooms + book.double_rooms == 0))
             printf("You must book at least one room.\n");
-    } while (single_rooms < 0 || double_rooms < 0 || (single_rooms + double_rooms == 0));
+    } while (book.single_rooms < 0 || book.double_rooms < 0 || (book.single_rooms + book.double_rooms == 0));
 
     // Nights
     do {
         printf("Enter number of nights: ");
-        scanf("%d", &nights);
-    } while (nights <= 0);
+        scanf("%d", &book.nights);
+    } while (book.nights <= 0);
 
     // Check-in date
     do {
         printf("Enter check-in month (1–12): ");
-        scanf("%d", &checkin_month);
-    } while (checkin_month < 1 || checkin_month > 12);
+        scanf("%d", &book.checkin_month);
+    } while (book.checkin_month < 1 || book.checkin_month > 12);
 
-    if (checkin_month == 2 &&
+    if (book.checkin_month == 2 &&
         ((this_year % 4 == 0 && this_year % 100 != 0) || (this_year % 400 == 0)))
         days_in_month[2] = 29;
     else
@@ -114,19 +114,19 @@ int main() {
 
     do {
         printf("Enter check-in day: ");
-        scanf("%d", &checkin_day);
-    } while (checkin_day < 1 || checkin_day > days_in_month[checkin_month]);
+        scanf("%d", &book.checkin_day);
+    } while (book.checkin_day < 1 || book.checkin_day > days_in_month[book.checkin_month]);
 
-    checkin_year = this_year;
-    if (checkin_month < this_month || 
-       (checkin_month == this_month && checkin_day < today))
-        checkin_year++;
+    book.checkin_year = this_year;
+    if (book.checkin_month < this_month || 
+       (book.checkin_month == this_month && book.checkin_day < today))
+        book.checkin_year++;
 
     // Check-out date calculation
     struct tm checkin_tm = {0};
-    checkin_tm.tm_year = checkin_year - 1900;
-    checkin_tm.tm_mon = checkin_month - 1;
-    checkin_tm.tm_mday = checkin_day + nights;
+    checkin_tm.tm_year = book.checkin_year - 1900;
+    checkin_tm.tm_mon = book.checkin_month - 1;
+    checkin_tm.tm_mday = book.checkin_day + book.nights;
     mktime(&checkin_tm);
 
     int checkout_day = checkin_tm.tm_mday;
@@ -144,26 +144,26 @@ int main() {
     }
 
     int assigned = 0;
-    int remaining_single = single_rooms;
-    int remaining_double = double_rooms;
+    int remaining_single = book.single_rooms;
+    int remaining_double = book.double_rooms;
 
     for (int floor = 1; floor <= 9; floor++) {
         for (int i = 0; i < 10; i++) {
             int roomNum = floor * 100 + i;
             if (remaining_single > 0 && i <= 4) {
                 fprintf(fp, "%d,%s,%04d-%02d-%02d,%04d-%02d-%02d,%d,%.2f,%.2f\n",
-                        roomNum, name,
-                        checkin_year, checkin_month, checkin_day,
+                        roomNum, book.name,
+                        book.checkin_year, book.checkin_month, book.checkin_day,
                         checkout_year, checkout_month, checkout_day,
-                        booking_id, 50.0f * nights, 50.0f * nights * 0.4f);
+                        booking_id, 50.0f * book.nights, 50.0f * book.nights * 0.4f);
                 remaining_single--;
                 assigned++;
             } else if (remaining_double > 0 && i >= 5) {
                 fprintf(fp, "%d,%s,%04d-%02d-%02d,%04d-%02d-%02d,%d,%.2f,%.2f\n",
-                        roomNum, name,
-                        checkin_year, checkin_month, checkin_day,
+                        roomNum, book.name,
+                        book.checkin_year, book.checkin_month, book.checkin_day,
                         checkout_year, checkout_month, checkout_day,
-                        booking_id, 75.0f * nights, 75.0f * nights * 0.4f);
+                        booking_id, 75.0f * book.nights, 75.0f * book.nights * 0.4f);
                 remaining_double--;
                 assigned++;
             }
@@ -177,18 +177,18 @@ int main() {
 
     fclose(fp);
 
-    float single_total = single_rooms * 50.0f * nights;
-    float double_total = double_rooms * 75.0f * nights;
+    float single_total = book.single_rooms * 50.0f * book.nights;
+    float double_total = book.double_rooms * 75.0f * book.nights;
     total = single_total + double_total;
     upfront = total * 0.4f;
 
     // Display
     printf("\n========== BOOKING SUMMARY ==========\n");
-    printf("Guest: %s\n", name);
+    printf("Guest: %s\n", book.name);
     printf("Booking ID: %04d\n", booking_id);
-    printf("Check-in: %04d-%02d-%02d\n", checkin_year, checkin_month, checkin_day);
+    printf("Check-in: %04d-%02d-%02d\n", book.checkin_year, book.checkin_month, book.checkin_day);
     printf("Check-out: %04d-%02d-%02d\n", checkout_year, checkout_month, checkout_day);
-    printf("Room(s) Booked: %d (Single: %d, Double: %d)\n", assigned, single_rooms, double_rooms);
+    printf("Room(s) Booked: %d (Single: %d, Double: %d)\n", assigned, book.single_rooms, book.double_rooms);
     printf("Total Price     : $%.2f\n", total);
     printf("Upfront Payment : $%.2f (40%%)\n", upfront);
     printf("=====================================\n");
