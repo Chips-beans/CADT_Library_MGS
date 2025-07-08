@@ -1,4 +1,4 @@
-#include "create-login-user.h"
+#include "create_login_user.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +21,7 @@ void decryptPassword(const char *encrypted, char *decrypted) {
 
 int loginUser(const char *username, const char *password)
 {
-    FILE *file = fopen("login/login-info.txt", "r"); // Open the file in read mode
+    FILE *file = fopen("login_info.txt", "r"); // Open the file in read mode
     if (file == NULL)
     {
         printf("Error opening file");
@@ -47,7 +47,7 @@ int loginUser(const char *username, const char *password)
 
 int loginStaff(const char *ID, const char *password)
 {
-    FILE *file = fopen("login/staff-login-info.txt", "r");
+    FILE *file = fopen("staff_login_info.txt", "r");
     if (file == NULL)
     {
         printf("Error opening file");
@@ -73,7 +73,7 @@ int loginStaff(const char *ID, const char *password)
 
 void createAccountUser(User user)
 {
-    FILE *file = fopen("login/login-info.txt", "a"); // Open the file in append mode
+    FILE *file = fopen("login_info.txt", "a"); // Open the file in append mode
     if (file == NULL)
     {
         printf("Error opening file");
@@ -85,7 +85,7 @@ void createAccountUser(User user)
 }
 void createAccountStaff(Staff staff)
 {
-    FILE *file = fopen("login/staff-login-info.txt", "a"); // Open the file in append mode
+    FILE *file = fopen("staff_login_info.txt", "a"); // Open the file in append mode
     if (file == NULL)
     {
         printf("Error opening file");
