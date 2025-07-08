@@ -110,6 +110,27 @@ int main()
                 char password[100];
                 scanf("%s", user.password);
                 int loginResult = loginUser(user.username, user.password);
+                
+                if(loginResult == 1){
+                    int userChoice;
+                    do{
+                    printf("Login successful");
+                    printf("Welcome %s", user.username);
+                    printf(" 1. Booking Room");
+                    scanf("%d", &userChoice);
+                    if(userChoice == 1){
+
+                    }
+                    printf(" 2. View Booking");
+                    scanf("%d", &userChoice);
+                    if(userChoice == 2){
+                        
+                    }
+                    printf(" 3. Exit");
+                    scanf("%d", &userChoice);
+                    }while(userChoice != 3);
+
+                }
             }else if (loginChoice == 3) continue;
         }
         else if (choice == 3)

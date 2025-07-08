@@ -1,20 +1,12 @@
+#include"user_booking.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-#define MAX_NAME 100
 #define ROOM_FILE "bookings.txt"
 
 // Struct to hold booking details
-typedef struct
-{
-    int room_number;
-    char guest_name[MAX_NAME];
-    int checkin_year, checkin_month, checkin_day;
-    int checkout_year, checkout_month, checkout_day;
-    int booking_id;
-} Booking;
 
 // Function to validate name input
 int valid_name(const char *str)
