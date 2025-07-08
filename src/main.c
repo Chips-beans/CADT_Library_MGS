@@ -7,6 +7,7 @@
 #include "user_cancel.h"
 #include "user_view_booking.h"
 #include "user_view_rooms.h"
+#include "checkIn.h"
 
 int main()
 {
@@ -67,7 +68,24 @@ int main()
                 scanf("%s", staff.staffID);
                 printf("                                                Password: ");
                 scanf("%s", staff.password);
-                int loginResult = loginStaff(staff.staffID, staff.password);
+                int isIn = loginStaff(staff.staffID, staff.password);
+                if(isIn){
+                    int choice;
+                    do{
+                        printf("Welcome, Staff\n");
+                        printf(" 1. Check or Change room availability\n");
+                        printf(" 2. View all room\n");
+                        printf(" 3. CheckIN/OUT\n");
+                        printf(" 4. Calculate Income\n");
+                        printf(" 5. View booking\n");
+                        printf(" 6. Back\n");
+                        scanf("%d", &choice);
+                        getchar();
+                        if(choice == 3){
+                            checkInGuest();
+                        }
+                    }while(choice != 6);
+                }
             }
             else if (loginChoice == 3)
                 continue;

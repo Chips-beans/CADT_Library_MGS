@@ -4,25 +4,31 @@
 #include <string.h>
 #include <stdbool.h>
 
-void encryptPassword(const char *password, char *encrypted) {
+void encryptPassword(const char *password, char *encrypted)
+{
     int i;
-    for (i = 0; password[i] != '\0'; i++) {
+    for (i = 0; password[i] != '\0'; i++)
+    {
         encrypted[i] = password[i] + 3;
     }
-    encrypted[i] = '\0'; 
+    encrypted[i] = '\0';
 }
 
-void decryptPassword(const char *encrypted, char *decrypted) {
+void decryptPassword(const char *encrypted, char *decrypted)
+{
     int i;
-    for (i = 0; encrypted[i] != '\0'; i++) {
+    for (i = 0; encrypted[i] != '\0'; i++)
+    {
         decrypted[i] = encrypted[i] - 3;
     }
     decrypted[i] = '\0';
 }
 
-bool loginUser(const char *username, const char *password) {
+bool loginUser(const char *username, const char *password)
+{
     FILE *file = fopen("login_info.csv", "r");
-    if (file == NULL) {
+    if (file == NULL)
+    {
         printf("Error opening file\n");
         return false;
     }
@@ -30,20 +36,24 @@ bool loginUser(const char *username, const char *password) {
     char line[256];
     File fileData;
 
-    while (fgets(line, sizeof(line), file)) {
+    while (fgets(line, sizeof(line), file))
+    {
         // Tokenize by comma
         char *token = strtok(line, ",");
-        if (token) strcpy(fileData.fileUsername, token);
+        if (token)
+            strcpy(fileData.fileUsername, token);
 
         token = strtok(NULL, ",");
-        if (token) strcpy(fileData.filePassword, token);
+        if (token)
+            strcpy(fileData.filePassword, token);
 
         // Remove newline from encrypted password
         fileData.filePassword[strcspn(fileData.filePassword, "\n")] = 0;
 
         decryptPassword(fileData.filePassword, fileData.dycryptedPassword);
 
-        if (strcmp(fileData.fileUsername, username) == 0 && strcmp(fileData.dycryptedPassword, password) == 0) {
+        if (strcmp(fileData.fileUsername, username) == 0 && strcmp(fileData.dycryptedPassword, password) == 0)
+        {
             printf("Login successful for user: %s\n", username);
             fclose(file);
             return true;
@@ -55,9 +65,11 @@ bool loginUser(const char *username, const char *password) {
     return false;
 }
 
-int loginStaff(const char *ID, const char *password) {
+int loginStaff(const char *ID, const char *password)
+{
     FILE *file = fopen("staff_login_info.csv", "r");
-    if (file == NULL) {
+    if (file == NULL)
+    {
         printf("Error opening file\n");
         return 0;
     }
@@ -65,18 +77,21 @@ int loginStaff(const char *ID, const char *password) {
     char line[256];
     File fileData;
 
-    while (fgets(line, sizeof(line), file)) {
+    while (fgets(line, sizeof(line), file))
+    {
         char *token = strtok(line, ",");
-        if (token) strcpy(fileData.fileUsername, token);
+        if (token)
+            strcpy(fileData.fileUsername, token);
 
         token = strtok(NULL, ",");
-        if (token) strcpy(fileData.filePassword, token);
+        if (token)
+            strcpy(fileData.filePassword, token);
 
         fileData.filePassword[strcspn(fileData.filePassword, "\n")] = 0;
 
         decryptPassword(fileData.filePassword, fileData.dycryptedPassword);
-
-        if (strcmp(fileData.fileUsername, ID) == 0 && strcmp(fileData.dycryptedPassword, password) == 0) {
+        if (strcmp(fileData.fileUsername, ID) == 0 && strcmp(fileData.dycryptedPassword, password) == 0)
+        {
             printf("Login successful for staff ID: %s\n", ID);
             fclose(file);
             return 1;
@@ -88,9 +103,11 @@ int loginStaff(const char *ID, const char *password) {
     return 0;
 }
 
-void createAccountUser(User user) {
+void createAccountUser(User user)
+{
     FILE *file = fopen("login_info.csv", "a");
-    if (file == NULL) {
+    if (file == NULL)
+    {
         printf("Error opening file\n");
         return;
     }
@@ -101,9 +118,11 @@ void createAccountUser(User user) {
     printf("Account created successfully for user: %s\n", user.username);
 }
 
-void createAccountStaff(Staff staff) {
+void createAccountStaff(Staff staff)
+{
     FILE *file = fopen("staff_login_info.csv", "a");
-    if (file == NULL) {
+    if (file == NULL)
+    {
         printf("Error opening file\n");
         return;
     }
