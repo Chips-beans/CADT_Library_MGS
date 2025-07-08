@@ -1,17 +1,16 @@
 #include "user_booking.h"
+#include "user_view_rooms.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-
-#define MAX_NAME 100
-#define ROOM_FILE "bookings.txt"
-#define MAX_ROOMS 90
+#include <ctype.h>
 
 // Function to validate name input
-int valid_name(const char *str) {
-    for (int i = 0; str[i]; i++) {
+int valid_name(const char *str)
+{
+    for (int i = 0; str[i]; i++)
+    {
         if (!((str[i] >= 'A' && str[i] <= 'Z') ||
               (str[i] >= 'a' && str[i] <= 'z') ||
               str[i] == ' '))
@@ -19,17 +18,33 @@ int valid_name(const char *str) {
     }
     return 1;
 }
+int isStringEmptyOrSpaces(const char *str)
+{
+    while (*str)
+    {
+        if (!isspace((unsigned char)*str))
+        {
+            return 0; // found a non-space char
+        }
+        str++;
+    }
+    return 1; // all spaces or empty
+}
 
 // Function to reuse or generate new booking ID
-int getAvailableBookingID() {
+int getAvailableBookingID()
+{
     FILE *fp = fopen("booking_ids.txt", "r");
     int id = -1;
 
-    if (fp) {
-        if (fscanf(fp, "%d", &id) == 1) {
+    if (fp)
+    {
+        if (fscanf(fp, "%d", &id) == 1)
+        {
             FILE *temp = fopen("temp_ids.txt", "w");
             int temp_id;
-            while (fscanf(fp, "%d", &temp_id) == 1) {
+            while (fscanf(fp, "%d", &temp_id) == 1)
+            {
                 if (temp_id != id)
                     fprintf(temp, "%d\n", temp_id);
             }
@@ -44,13 +59,15 @@ int getAvailableBookingID() {
 
     FILE *last = fopen("last_id.txt", "r");
     int last_id = 999;
-    if (last) {
+    if (last)
+    {
         fscanf(last, "%d", &last_id);
         fclose(last);
     }
 
     id = last_id + 1;
-    if (id > 9999) id = 1000;
+    if (id > 9999)
+        id = 1000;
 
     last = fopen("last_id.txt", "w");
     fprintf(last, "%d", id);
@@ -59,7 +76,8 @@ int getAvailableBookingID() {
     return id;
 }
 
-int bookRoom() {
+int bookRoom()
+{
     Booking book;
     float total = 0, upfront = 0;
     time_t t = time(NULL);
@@ -67,7 +85,7 @@ int bookRoom() {
     int today = tm.tm_mday;
     int this_month = tm.tm_mon + 1;
     int this_year = tm.tm_year + 1900;
-    int days_in_month[] = {0, 31,28,31,30,31,30,31,31,30,31,30,31};
+    int days_in_month[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
     // Leap year check
     if ((this_year % 4 == 0 && this_year % 100 != 0) || (this_year % 400 == 0))
@@ -76,16 +94,18 @@ int bookRoom() {
     printf("============== HOTEL BOOKING SYSTEM ==============\n");
 
     // Name input
-    do {
+    do
+    {
         printf("Enter your name: ");
         fgets(book.name, sizeof(book.name), stdin);
         book.name[strcspn(book.name, "\n")] = 0;
-        if (!valid_name(book.name) || strlen(book.name) == 0)
+        if (!valid_name(book.name) || isStringEmptyOrSpaces(book.name))
             printf("Invalid name. Try again.\n");
-    } while (!valid_name(book.name) || strlen(book.name) == 0);
+    } while (!valid_name(book.name) || isStringEmptyOrSpaces(book.name));
 
     // Room selection
-    do {
+    do
+    {
         printf("Enter number of single rooms: ");
         scanf("%d", &book.single_rooms);
         printf("Enter number of double rooms: ");
@@ -95,13 +115,15 @@ int bookRoom() {
     } while (book.single_rooms < 0 || book.double_rooms < 0 || (book.single_rooms + book.double_rooms == 0));
 
     // Nights
-    do {
+    do
+    {
         printf("Enter number of nights: ");
         scanf("%d", &book.nights);
     } while (book.nights <= 0);
 
     // Check-in date
-    do {
+    do
+    {
         printf("Enter check-in month (1–12): ");
         scanf("%d", &book.checkin_month);
     } while (book.checkin_month < 1 || book.checkin_month > 12);
@@ -112,14 +134,15 @@ int bookRoom() {
     else
         days_in_month[2] = 28;
 
-    do {
+    do
+    {
         printf("Enter check-in day: ");
         scanf("%d", &book.checkin_day);
     } while (book.checkin_day < 1 || book.checkin_day > days_in_month[book.checkin_month]);
 
     book.checkin_year = this_year;
-    if (book.checkin_month < this_month || 
-       (book.checkin_month == this_month && book.checkin_day < today))
+    if (book.checkin_month < this_month ||
+        (book.checkin_month == this_month && book.checkin_day < today))
         book.checkin_year++;
 
     // Check-out date calculation
@@ -138,34 +161,48 @@ int bookRoom() {
 
     // Assign rooms and save to file
     FILE *fp = fopen(ROOM_FILE, "a");
-    if (!fp) {
-        printf("Error: could not open bookings.txt\n");
+    if (!fp)
+    {
+        printf("Error: could not open bookings.csv\n");
         return 1;
     }
 
     int assigned = 0;
     int remaining_single = book.single_rooms;
     int remaining_double = book.double_rooms;
-
-    for (int floor = 1; floor <= 9; floor++) {
-        for (int i = 0; i < 10; i++) {
+    Date date;
+            date.day = book.checkin_day;
+            date.month = book.checkin_month;
+            date.year = book.checkin_year;
+    for (int floor = 1; floor <= 9; floor++)
+    {
+        for (int i = 0; i < 10; i++)
+        {
             int roomNum = floor * 100 + i;
-            if (remaining_single > 0 && i <= 4) {
-                fprintf(fp, "%d,%s,%04d-%02d-%02d,%04d-%02d-%02d,%d,%.2f,%.2f\n",
-                        roomNum, book.name,
-                        book.checkin_year, book.checkin_month, book.checkin_day,
-                        checkout_year, checkout_month, checkout_day,
-                        booking_id, 50.0f * book.nights, 50.0f * book.nights * 0.4f);
-                remaining_single--;
-                assigned++;
-            } else if (remaining_double > 0 && i >= 5) {
-                fprintf(fp, "%d,%s,%04d-%02d-%02d,%04d-%02d-%02d,%d,%.2f,%.2f\n",
-                        roomNum, book.name,
-                        book.checkin_year, book.checkin_month, book.checkin_day,
-                        checkout_year, checkout_month, checkout_day,
-                        booking_id, 75.0f * book.nights, 75.0f * book.nights * 0.4f);
-                remaining_double--;
-                assigned++;
+            
+            int isBook = isRoomBooked(ROOM_FILE, roomNum, date);
+            if (!isBook)
+            {
+                if (remaining_single > 0 && i <= 4)
+                {
+                    fprintf(fp, "%d,%s,%04d-%02d-%02d,%04d-%02d-%02d,%d,%.2f,%.2f\n",
+                            roomNum, book.name,
+                            book.checkin_year, book.checkin_month, book.checkin_day,
+                            checkout_year, checkout_month, checkout_day,
+                            booking_id, 50.0f * book.nights, 50.0f * book.nights * 0.4f);
+                    remaining_single--;
+                    assigned++;
+                }
+                else if (remaining_double > 0 && i >= 5)
+                {
+                    fprintf(fp, "%d,%s,%04d-%02d-%02d,%04d-%02d-%02d,%d,%.2f,%.2f\n",
+                            roomNum, book.name,
+                            book.checkin_year, book.checkin_month, book.checkin_day,
+                            checkout_year, checkout_month, checkout_day,
+                            booking_id, 75.0f * book.nights, 75.0f * book.nights * 0.4f);
+                    remaining_double--;
+                    assigned++;
+                }
             }
 
             if (remaining_single == 0 && remaining_double == 0)

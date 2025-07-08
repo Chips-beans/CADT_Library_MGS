@@ -2,137 +2,178 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "user_cancel.h"
 
-#define BOOKING_FILE "bookings.txt"
-#define TEMP_FILE "temp_bookings.txt"
-#define ID_FILE "booking_ids.txt"
 
-int daysBetween(int y1, int m1, int d1, int y2, int m2, int d2)
-{
-    struct tm date1 = {0}, date2 = {0};
-    date1.tm_year = y1 - 1900;
-    date1.tm_mon = m1 - 1;
-    date1.tm_mday = d1;
+// Calculate the number of days between two calendar dates
+int calculateDaysBetween(int year1, int month1, int day1, int year2, int month2, int day2) {
+    struct tm startDate = {0}, endDate = {0};
+    startDate.tm_year = year1 - 1900;
+    startDate.tm_mon = month1 - 1;
+    startDate.tm_mday = day1;
 
-    date2.tm_year = y2 - 1900;
-    date2.tm_mon = m2 - 1;
-    date2.tm_mday = d2;
+    endDate.tm_year = year2 - 1900;
+    endDate.tm_mon = month2 - 1;
+    endDate.tm_mday = day2;
 
-    time_t t1 = mktime(&date1);
-    time_t t2 = mktime(&date2);
-    double seconds = difftime(t2, t1);
+    time_t startTimestamp = mktime(&startDate);
+    time_t endTimestamp = mktime(&endDate);
+    double timeDifference = difftime(endTimestamp, startTimestamp);
 
-    return (int)(seconds / (60 * 60 * 24)); // convert to days
+    return (int)(timeDifference / (60 * 60 * 24)); // Convert seconds to days
 }
 
-int main()
-{
-    int cancel_id;
-    int found = 0;
-    int earliest_y, earliest_m, earliest_d;
-    int refund_days = -1;
+// Read a booking record from file
+int readBookingFromCSV(FILE *file, BookingCancel *booking) {
+    char line[256];
+    if (fgets(line, sizeof(line), file) == NULL) return 0;
 
+    // Remove newline character if present
+    line[strcspn(line, "\n")] = 0;
+
+    // Tokenize line
+    char *token = strtok(line, ",");
+    if (!token) return 0;
+    booking->roomNumber = atoi(token);
+
+    token = strtok(NULL, ",");
+    if (!token) return 0;
+    strcpy(booking->guestName, token);
+
+    token = strtok(NULL, ",");
+    if (!token) return 0;
+    sscanf(token, "%d-%d-%d", &booking->checkInYear, &booking->checkInMonth, &booking->checkInDay);
+
+    token = strtok(NULL, ",");
+    if (!token) return 0;
+    sscanf(token, "%d-%d-%d", &booking->checkOutYear, &booking->checkOutMonth, &booking->checkOutDay);
+
+    token = strtok(NULL, ",");
+    if (!token) return 0;
+    booking->bookingID = atoi(token);
+
+    token = strtok(NULL, ",");
+    if (!token) return 0;
+    booking->totalPrice = atof(token);
+
+    token = strtok(NULL, ",");
+    if (!token) return 0;
+    booking->upfrontPayment = atof(token);
+
+    return 1;
+}
+
+
+// Write a booking record to file
+void writeBookingToCSV(FILE *file, const BookingCancel *booking) {
+    fprintf(file, "%d,%s,%04d-%02d-%02d,%04d-%02d-%02d,%d,%.2f,%.2f\n",
+            booking->roomNumber, booking->guestName,
+            booking->checkInYear, booking->checkInMonth, booking->checkInDay,
+            booking->checkOutYear, booking->checkOutMonth, booking->checkOutDay,
+            booking->bookingID, booking->totalPrice, booking->upfrontPayment);
+}
+
+
+// Main function to cancel a booking by booking ID
+int cancelBooking() {
+    int enteredBookingID;                     // Booking ID entered by the user
+    int isBookingFound = 0;                   // Flag to track if the booking ID was found
+    int daysBeforeCheckIn = -1;               // Days remaining before check-in (used for refund policy)
+
+    BookingCancel currentBooking;                   // Struct to hold each booking as it's read
+    BookingCancel earliestCheckInBooking;           // Tracks the earliest check-in among matched bookings
+
+    // Prompt user to enter booking ID
     printf("========== CANCEL BOOKING ==========\n");
     printf("Enter your 4-digit Booking ID: ");
-    scanf("%d", &cancel_id);
+    scanf("%d", &enteredBookingID);
 
-    FILE *in = fopen(BOOKING_FILE, "r");
-    FILE *out = fopen(TEMP_FILE, "w");
-
-    if (!in || !out)
-    {
+    // Open main bookings file (for reading) and temporary file (for filtered bookings)
+    FILE *bookingFile = fopen(BOOKING_CSV_FILE, "r");
+    FILE *tempFile = fopen(TEMP_CSV_FILE, "w");
+    if (!bookingFile || !tempFile) {
         printf("Error accessing booking files.\n");
         return 1;
     }
 
-    int room, id;
-    char name[100];
-    int y1, m1, d1, y2, m2, d2;
-    int first_found = 1;
+    // Get current date (used to compare with check-in date)
+    time_t now = time(NULL);
+    struct tm today = *localtime(&now);
+    int currentYear = today.tm_year + 1900;
+    int currentMonth = today.tm_mon + 1;
+    int currentDay = today.tm_mday;
 
-    // Get today's date
-    time_t t = time(NULL);
-    struct tm today = *localtime(&t);
-    int ty = today.tm_year + 1900;
-    int tm = today.tm_mon + 1;
-    int td = today.tm_mday;
+    int isFirstMatch = 1; // Used to track and store the earliest check-in among matching records
 
-    while (fscanf(in, "%d,%99[^,],%d-%d-%d,%d-%d-%d,%d\n",
-                  &room, name,
-                  &y1, &m1, &d1,
-                  &y2, &m2, &d2, &id) == 9)
-    {
-        if (id == cancel_id)
-        {
-            found = 1;
-            if (first_found)
-            {
-                earliest_y = y1;
-                earliest_m = m1;
-                earliest_d = d1;
-                first_found = 0;
-            }
-            else
-            {
-                // Keep the earliest check-in if multiple rooms
-                int cmp = daysBetween(ty, tm, td, y1, m1, d1);
-                int prev = daysBetween(ty, tm, td, earliest_y, earliest_m, earliest_d);
-                if (cmp < prev)
-                {
-                    earliest_y = y1;
-                    earliest_m = m1;
-                    earliest_d = d1;
+    // Process each booking record from the file
+    while (readBookingFromCSV(bookingFile, &currentBooking)) {
+        // Check if current booking matches the user's entered ID
+        if (currentBooking.bookingID == enteredBookingID) {
+            isBookingFound = 1;
+
+            // Store the first matching booking or update if there's an earlier check-in
+            if (isFirstMatch) {
+                earliestCheckInBooking = currentBooking;
+                isFirstMatch = 0;
+            } else {
+                // Compare current booking's check-in date with stored earliest
+                int newCheckInDiff = calculateDaysBetween(currentYear, currentMonth, currentDay,
+                                                          currentBooking.checkInYear, currentBooking.checkInMonth, currentBooking.checkInDay);
+                int existingCheckInDiff = calculateDaysBetween(currentYear, currentMonth, currentDay,
+                                                               earliestCheckInBooking.checkInYear, earliestCheckInBooking.checkInMonth, earliestCheckInBooking.checkInDay);
+                // Update to earlier check-in date if needed
+                if (newCheckInDiff < existingCheckInDiff) {
+                    earliestCheckInBooking = currentBooking;
                 }
             }
-            printf("Canceled room %d for guest %s\n", room, name);
-        }
-        else
-        {
-            fprintf(out, "%d,%s,%04d-%02d-%02d,%04d-%02d-%02d,%d\n",
-                    room, name,
-                    y1, m1, d1,
-                    y2, m2, d2, id);
+
+            // Show which room is being canceled
+            printf("Canceled room %d for guest %s\n", currentBooking.roomNumber, currentBooking.guestName);
+        } else {
+            // Keep non-canceled bookings by writing them to the temp file
+            writeBookingToCSV(tempFile, &currentBooking);
         }
     }
 
-    fclose(in);
-    fclose(out);
+    // Close both booking files
+    fclose(bookingFile);
+    fclose(tempFile);
 
-    if (found)
-    {
-        remove(BOOKING_FILE);
-        rename(TEMP_FILE, BOOKING_FILE);
+    // If the booking was found and canceled
+    if (isBookingFound) {
+        // Replace the old bookings file with the updated temp file
+        remove(BOOKING_CSV_FILE);
+        rename(TEMP_CSV_FILE, BOOKING_CSV_FILE);
 
-        FILE *idfile = fopen(ID_FILE, "a");
-        if (idfile)
-        {
-            fprintf(idfile, "%d\n", cancel_id);
-            fclose(idfile);
+        // Log the canceled booking ID for record-keeping
+        FILE *canceledIDsFile = fopen(CANCELED_IDS_FILE, "a");
+        if (canceledIDsFile) {
+            fprintf(canceledIDsFile, "%d\n", enteredBookingID);
+            fclose(canceledIDsFile);
         }
 
-        refund_days = daysBetween(ty, tm, td, earliest_y, earliest_m, earliest_d);
+        // Calculate how many days before check-in the booking was canceled
+        daysBeforeCheckIn = calculateDaysBetween(currentYear, currentMonth, currentDay,
+                                                 earliestCheckInBooking.checkInYear,
+                                                 earliestCheckInBooking.checkInMonth,
+                                                 earliestCheckInBooking.checkInDay);
 
+        // Display cancellation summary and refund policy
         printf("\n=========================================\n");
-        printf(" Booking ID %d has been successfully canceled.\n", cancel_id);
-        if (refund_days >= 3)
-        {
+        printf(" Booking ID %d has been successfully canceled.\n", enteredBookingID);
+        if (daysBeforeCheckIn >= 3) {
             printf(" You will receive a 40%% refund within 7 business days.\n");
-        }
-        else if (refund_days >= 0)
-        {
+        } else if (daysBeforeCheckIn >= 0) {
             printf(" No refund due to our hotel policy (less than 3 days before check-in).\n");
-        }
-        else
-        {
+        } else {
             printf(" Your check-in date is already past. No refund issued.\n");
         }
         printf("=========================================\n");
-    }
-    else
-    {
-        remove(TEMP_FILE);
-        printf(" Booking ID %d not found.\n", cancel_id);
+    } else {
+        // If booking wasn't found, clean up temp file and inform user
+        remove(TEMP_CSV_FILE);
+        printf(" Booking ID %d not found.\n", enteredBookingID);
     }
 
-    return 0;
+    return 0; // Program completed successfully
 }

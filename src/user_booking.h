@@ -1,7 +1,10 @@
 #ifndef USER_BOOKING_h
 #define USER_BOOKING_h
 
+
 #define MAX_NAME 100
+#define ROOM_FILE "bookings.csv"
+#define MAX_ROOMS 90
 typedef struct 
 {
     char name[MAX_NAME];
@@ -11,6 +14,8 @@ typedef struct
 
 
 int valid_name(const char *str);
+int isStringEmptyOrSpaces(const char *str);
 int getAvailableBookingID();
+
 int bookRoom();
 #endif

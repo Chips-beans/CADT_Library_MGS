@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include "create_login_user.h"
 #include "user_booking.h"
+#include "user_cancel.h"
+#include "user_view_booking.h"
+#include "user_view_rooms.h"
 
 int main()
 {
@@ -80,6 +83,7 @@ int main()
             printf("                                                    3. Exit\n");
             printf("                                                Enter your choice(1 or 2 or 3): ");
             scanf("%d", &loginChoice);
+            getchar();
             if (loginChoice == 2)
             {
                 User user;
@@ -88,16 +92,36 @@ int main()
                     printf("---------------------------------------------------You have chosen to sign up as Customer.----------------------------------------------------\n");
                     printf("----------------------------------------------------------------------------------------------------------------------------------------------\n");
                     printf("                                        Please enter your Customer Username, password, confirm password, email address, and phone number.\n");
-                    printf("                                            Username: ");
-                    scanf("%s", user.username);
-                    printf("                                            Password: ");
-                    scanf("%s", user.password);
-                    printf("                                            Confirm Password: ");
-                    scanf("%s", user.confirmPassword);
-                    printf("                                            Email Address: ");
-                    scanf("%s", user.emailAddress);
-                    printf("                                            Phone Number: ");
-                    scanf("%s", user.phoneNumber);
+                    do
+                    {
+                        printf("                                            Username: ");
+                        fgets(user.username, sizeof(user.username), stdin);
+                        user.username[strcspn(user.username, "\n")] = 0;
+                    } while (!valid_name(user.username) || isStringEmptyOrSpaces(user.username));
+                    do
+                    {
+                        printf("                                            Password: ");
+                        fgets(user.password, sizeof(user.password), stdin);
+                        user.password[strcspn(user.password, "\n")] = 0;
+                    } while (isStringEmptyOrSpaces(user.password));
+                    do
+                    {
+                        printf("                                            Confirm Password: ");
+                        fgets(user.confirmPassword, sizeof(user.confirmPassword), stdin);
+                        user.confirmPassword[strcspn(user.confirmPassword, "\n")] = 0;
+                    } while (isStringEmptyOrSpaces(user.confirmPassword));
+                    do
+                    {
+                        printf("                                            Email Address: ");
+                        fgets(user.emailAddress, sizeof(user.emailAddress), stdin);
+                        user.emailAddress[strcspn(user.emailAddress, "\n")] = 0;
+                    } while (isStringEmptyOrSpaces(user.emailAddress));
+                    do
+                    {
+                        printf("                                            Phone Number: ");
+                        fgets(user.phoneNumber, sizeof(user.phoneNumber), stdin);
+                        user.phoneNumber[strcspn(user.phoneNumber, "\n")] = 0;
+                    } while (isStringEmptyOrSpaces(user.phoneNumber));
                 } while (strcmp(user.password, user.confirmPassword) != 0);
                 createAccountUser(user);
             }
@@ -107,11 +131,18 @@ int main()
                 printf("----------------------------------------------------You have chosen to log in as Customer.----------------------------------------------------\n");
                 printf("----------------------------------------------------------------------------------------------------------------------------------------------\n");
                 printf("                                            Please enter your Customer Username and Password.\n");
-                printf("                                                Username: ");
-                scanf("%s", user.username);
-                printf("                                                Password: ");
-                char password[100];
-                scanf("%s", user.password);
+                do
+                {
+                    printf("                                            Username: ");
+                    fgets(user.username, sizeof(user.username), stdin);
+                    user.username[strcspn(user.username, "\n")] = 0;
+                } while (!valid_name(user.username) || isStringEmptyOrSpaces(user.username));
+                do
+                {
+                    printf("                                            Password: ");
+                    fgets(user.password, sizeof(user.password), stdin);
+                    user.password[strcspn(user.password, "\n")] = 0;
+                } while (isStringEmptyOrSpaces(user.password));
                 bool loginResult = loginUser(user.username, user.password);
                 if (loginResult)
                 {
@@ -121,17 +152,33 @@ int main()
                         printf("Welcome %s\n", user.username);
                         printf(" 1. Booking Room\n");
                         printf(" 2. View Booking\n");
-                        printf(" 3. Exit\n");
+                        printf(" 3. Cancel Booking\n");
+                        printf(" 4. Exit\n");
                         scanf("%d", &userChoice);
                         getchar();
                         if (userChoice == 1)
                         {
-                            bookRoom();
+                            int bookingRoomUserChoice;
+                            do{
+                                printf("Booking Room\n");
+                                printf(" 1. View Room\n");
+                                printf(" 2. Book Room\n");
+                                printf(" 3. Back\n");
+                                scanf("%d", &bookingRoomUserChoice);
+                                getchar();
+                                if(bookingRoomUserChoice == 1) userViewRoom();
+                                if(bookingRoomUserChoice == 2) bookRoom();
+                            }while(bookingRoomUserChoice != 3);
                         }
                         if (userChoice == 2)
                         {
+                            userViewBooking(user.username);
                         }
-                    } while (userChoice != 3);
+                        if (userChoice == 3)
+                        {
+                            cancelBooking();
+                        }
+                    } while (userChoice != 4);
                 }
             }
             else if (loginChoice == 3)
