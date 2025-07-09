@@ -2,58 +2,69 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 #include "checkIn.h"
+#include "user_booking.h"
 
-int readCheckInFromCSV(FILE *file, CheckIN *booking) {
+int readCheckInFromCSV(FILE *file, CheckIN *booking)
+{
     char line[256];
-    if (fgets(line, sizeof(line), file) == NULL) return 0;
+    if (fgets(line, sizeof(line), file) == NULL)
+        return 0;
 
     // Remove newline character if present
     line[strcspn(line, "\n")] = 0;
 
     // Tokenize line
     char *token = strtok(line, ",");
-    if (!token) return 0;
+    if (!token)
+        return 0;
     booking->roomNumber = atoi(token);
 
     token = strtok(NULL, ",");
-    if (!token) return 0;
+    if (!token)
+        return 0;
     strcpy(booking->guestName, token);
 
     token = strtok(NULL, ",");
-    if (!token) return 0;
+    if (!token)
+        return 0;
     sscanf(token, "%d-%d-%d", &booking->checkInYear, &booking->checkInMonth, &booking->checkInDay);
 
     token = strtok(NULL, ",");
-    if (!token) return 0;
+    if (!token)
+        return 0;
     sscanf(token, "%d-%d-%d", &booking->checkOutYear, &booking->checkOutMonth, &booking->checkOutDay);
 
     token = strtok(NULL, ",");
-    if (!token) return 0;
+    if (!token)
+        return 0;
     booking->bookingID = atoi(token);
 
     token = strtok(NULL, ",");
-    if (!token) return 0;
+    if (!token)
+        return 0;
     booking->totalPrice = atof(token);
 
     token = strtok(NULL, ",");
-    if (!token) return 0;
+    if (!token)
+        return 0;
     booking->upfrontPayment = atof(token);
 
     return 1;
 }
 
-
 // Write a booking record to file
-void writeCheckInToCSV(FILE *file, const CheckIN *booking) {
+void writeCheckInToCSV(FILE *file, const CheckIN *booking)
+{
     fprintf(file, "%d,%s,%04d-%02d-%02d,%04d-%02d-%02d,%d,%.2f,%.2f\n",
             booking->roomNumber, booking->guestName,
             booking->checkInYear, booking->checkInMonth, booking->checkInDay,
             booking->checkOutYear, booking->checkOutMonth, booking->checkOutDay,
             booking->bookingID, booking->totalPrice, booking->upfrontPayment);
 }
-
-int checkInGuest() {
+int checkIn()
+{
     int inputBookingID;
     char inputGuestName[100];
     CheckIN booking;
@@ -72,7 +83,8 @@ int checkInGuest() {
     FILE *bookingFile = fopen(BOOKING_CSV_FILE, "r");
     FILE *checkinFile = fopen(CHECKIN_CSV_FILE, "a");
 
-    if (!bookingFile || !checkinFile) {
+    if (!bookingFile || !checkinFile)
+    {
         printf("Error opening files.\n");
         return 1;
     }
@@ -86,14 +98,17 @@ int checkInGuest() {
     // Read and skip CSV header if present
     char header[256];
 
-    while (readCheckInFromCSV(bookingFile, &booking)) {
+    while (readCheckInFromCSV(bookingFile, &booking))
+    {
         if (booking.bookingID == inputBookingID &&
-            (strlen(inputGuestName) == 0 || strcmp(booking.guestName, inputGuestName) == 0)) {
+            (strlen(inputGuestName) == 0 || strcmp(booking.guestName, inputGuestName) == 0))
+        {
             found = 1;
 
             if (booking.checkInYear == currentYear &&
                 booking.checkInMonth == currentMonth &&
-                booking.checkInDay == currentDay) {
+                booking.checkInDay == currentDay)
+            {
 
                 writeCheckInToCSV(checkinFile, &booking);
 
@@ -103,20 +118,40 @@ int checkInGuest() {
                 printf(" Check-in Date: %04d-%02d-%02d\n",
                        booking.checkInYear, booking.checkInMonth, booking.checkInDay);
                 printf("=====================================\n");
-
-            } else {
+            }
+            else
+            {
                 printf("\nCannot check in guest %s today.\n", booking.guestName);
-                printf(" Scheduled date: %04d-%02d-%02d\n", 
-                        booking.checkInYear, booking.checkInMonth, booking.checkInDay);
+                printf(" Scheduled date: %04d-%02d-%02d\n",
+                       booking.checkInYear, booking.checkInMonth, booking.checkInDay);
             }
         }
     }
 
-    if (!found) {
+    if (!found)
+    {
         printf("No matching booking found for Booking ID %d.\n", inputBookingID);
     }
 
     fclose(bookingFile);
     fclose(checkinFile);
+    return 0;
+}
+int checkInGuest()
+{
+    char choice;
+    printf("Has the guest booked before? (Y/N): ");
+    scanf(" %c", &choice);
+    getchar(); // consume newline
+    choice = toupper(choice);
+    if (choice == 'Y')
+    {
+        checkIn();
+    }
+    else if (choice == 'N')
+    {
+        bookRoom();
+        checkIn();
+    }
     return 0;
 }

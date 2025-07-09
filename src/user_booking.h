@@ -16,6 +16,5 @@ typedef struct
 int valid_name(const char *str);
 int isStringEmptyOrSpaces(const char *str);
 int getAvailableBookingID();
-
 int bookRoom();
 #endif

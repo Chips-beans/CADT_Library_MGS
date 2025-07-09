@@ -125,7 +125,7 @@ int bookRoom()
     // Check-in date
     do
     {
-        printf("Enter check-in month (1–12): ");
+        printf("Enter check-in month (1-12): ");
         scanf("%d", &book.checkin_month);
     } while (book.checkin_month < 1 || book.checkin_month > 12);
 
