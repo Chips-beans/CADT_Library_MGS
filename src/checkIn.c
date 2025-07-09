@@ -49,7 +49,7 @@ int checkInGuest() {
                 // Log the check-in
                 writeBookingToCSV(checkinFile, &booking);
 
-                printf("\n✅ Check-in successful!\n");
+                printf("\nCheck-in successful!\n");
                 printf(" Guest: %s\n", booking.guestName);
                 printf(" Room: %d\n", booking.roomNumber);
                 printf(" Check-in Date: %04d-%02d-%02d\n",
