@@ -1,5 +1,6 @@
 #include "user_booking.h"
 #include "user_view_rooms.h"
+#include "updateFile.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -190,6 +191,7 @@ int bookRoom()
                             book.checkin_year, book.checkin_month, book.checkin_day,
                             checkout_year, checkout_month, checkout_day,
                             booking_id, 50.0f * book.nights, 50.0f * book.nights * 0.4f);
+                    updateRoomStatus("rooms.csv", roomNum, "Booked");
                     remaining_single--;
                     assigned++;
                 }
@@ -200,6 +202,7 @@ int bookRoom()
                             book.checkin_year, book.checkin_month, book.checkin_day,
                             checkout_year, checkout_month, checkout_day,
                             booking_id, 75.0f * book.nights, 75.0f * book.nights * 0.4f);
+                    updateRoomStatus("rooms.csv", roomNum, "Booked");
                     remaining_double--;
                     assigned++;
                 }

@@ -2,10 +2,56 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "checkIn.h"  // Make sure this contains the BookingCancel struct
+#include "checkIn.h"
 
-int readBookingFromCSV(FILE *file, CheckIN *booking);
-void writeBookingToCSV(FILE *file, const CheckIN *booking);
+int readCheckInFromCSV(FILE *file, CheckIN *booking) {
+    char line[256];
+    if (fgets(line, sizeof(line), file) == NULL) return 0;
+
+    // Remove newline character if present
+    line[strcspn(line, "\n")] = 0;
+
+    // Tokenize line
+    char *token = strtok(line, ",");
+    if (!token) return 0;
+    booking->roomNumber = atoi(token);
+
+    token = strtok(NULL, ",");
+    if (!token) return 0;
+    strcpy(booking->guestName, token);
+
+    token = strtok(NULL, ",");
+    if (!token) return 0;
+    sscanf(token, "%d-%d-%d", &booking->checkInYear, &booking->checkInMonth, &booking->checkInDay);
+
+    token = strtok(NULL, ",");
+    if (!token) return 0;
+    sscanf(token, "%d-%d-%d", &booking->checkOutYear, &booking->checkOutMonth, &booking->checkOutDay);
+
+    token = strtok(NULL, ",");
+    if (!token) return 0;
+    booking->bookingID = atoi(token);
+
+    token = strtok(NULL, ",");
+    if (!token) return 0;
+    booking->totalPrice = atof(token);
+
+    token = strtok(NULL, ",");
+    if (!token) return 0;
+    booking->upfrontPayment = atof(token);
+
+    return 1;
+}
+
+
+// Write a booking record to file
+void writeCheckInToCSV(FILE *file, const CheckIN *booking) {
+    fprintf(file, "%d,%s,%04d-%02d-%02d,%04d-%02d-%02d,%d,%.2f,%.2f\n",
+            booking->roomNumber, booking->guestName,
+            booking->checkInYear, booking->checkInMonth, booking->checkInDay,
+            booking->checkOutYear, booking->checkOutMonth, booking->checkOutDay,
+            booking->bookingID, booking->totalPrice, booking->upfrontPayment);
+}
 
 int checkInGuest() {
     int inputBookingID;
@@ -17,37 +63,39 @@ int checkInGuest() {
     printf("Enter 4-digit Booking ID to check in: ");
     scanf("%d", &inputBookingID);
     getchar();
-    printf("Enter Guest Name: ");
-    fgets(inputGuestName, sizeof(inputGuestName),stdin);
+    printf("Enter Guest Name (or press Enter to skip): ");
+    fgets(inputGuestName, sizeof(inputGuestName), stdin);
+
+    // Remove trailing newline
+    inputGuestName[strcspn(inputGuestName, "\n")] = '\0';
 
     FILE *bookingFile = fopen(BOOKING_CSV_FILE, "r");
-    FILE *checkinFile = fopen(CHECKIN_CSV_FILE, "a"); // Append mode
+    FILE *checkinFile = fopen(CHECKIN_CSV_FILE, "a");
 
     if (!bookingFile || !checkinFile) {
-        printf("Error opening booking/check-in file.\n");
+        printf("Error opening files.\n");
         return 1;
     }
 
-    char header[256];
-
-    // Get today's date
     time_t now = time(NULL);
     struct tm today = *localtime(&now);
     int currentYear = today.tm_year + 1900;
     int currentMonth = today.tm_mon + 1;
     int currentDay = today.tm_mday;
 
-    while (readBookingFromCSV(bookingFile, &booking)) {
-        if (booking.bookingID == inputBookingID && booking.guestName == inputGuestName) {
+    // Read and skip CSV header if present
+    char header[256];
+
+    while (readCheckInFromCSV(bookingFile, &booking)) {
+        if (booking.bookingID == inputBookingID &&
+            (strlen(inputGuestName) == 0 || strcmp(booking.guestName, inputGuestName) == 0)) {
             found = 1;
 
-            // Check if today matches the check-in date
             if (booking.checkInYear == currentYear &&
                 booking.checkInMonth == currentMonth &&
                 booking.checkInDay == currentDay) {
 
-                // Log the check-in
-                writeBookingToCSV(checkinFile, &booking);
+                writeCheckInToCSV(checkinFile, &booking);
 
                 printf("\nCheck-in successful!\n");
                 printf(" Guest: %s\n", booking.guestName);
@@ -57,20 +105,15 @@ int checkInGuest() {
                 printf("=====================================\n");
 
             } else {
-                printf("\nCannot check in today.\n");
-                printf(" Guest %s is scheduled to check in on %04d-%02d-%02d.\n",
-                       booking.guestName,
-                       booking.checkInYear, booking.checkInMonth, booking.checkInDay);
-                printf(" Today's date is %04d-%02d-%02d.\n",
-                       currentYear, currentMonth, currentDay);
+                printf("\nCannot check in guest %s today.\n", booking.guestName);
+                printf(" Scheduled date: %04d-%02d-%02d\n", 
+                        booking.checkInYear, booking.checkInMonth, booking.checkInDay);
             }
-
-            break; // Stop searching
         }
     }
 
     if (!found) {
-        printf("Booking ID %d not found.\n", inputBookingID);
+        printf("No matching booking found for Booking ID %d.\n", inputBookingID);
     }
 
     fclose(bookingFile);
