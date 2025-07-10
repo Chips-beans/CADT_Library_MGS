@@ -68,9 +68,7 @@ int main()
                     scanf("%s", staff.emailAddress);
                     printf("                                            Phone Number: ");
                     scanf("%s", staff.phoneNumber);
-
                     break;
-
                 } while (1);
 
                 createAccountStaff(staff);
