@@ -8,7 +8,10 @@
 #include "user_view_booking.h"
 #include "user_view_rooms.h"
 #include "checkIn.h"
-
+#include "staff_viewandupdate_room.h"
+#include "staff_check_in.h"
+#include "staff_check_out.h"
+#include "staff_income.h"
 int main()
 {
     int choice;
@@ -69,22 +72,47 @@ int main()
                 printf("                                                Password: ");
                 scanf("%s", staff.password);
                 int isIn = loginStaff(staff.staffID, staff.password);
-                if(isIn){
+                if (isIn)
+                {
                     int choice;
-                    do{
+                    do
+                    {
                         printf("Welcome, Staff\n");
-                        printf(" 1. Check or Change room availability\n");
-                        printf(" 2. View all room\n");
-                        printf(" 3. CheckIN/OUT\n");
-                        printf(" 4. Calculate Income\n");
-                        printf(" 5. View booking\n");
-                        printf(" 6. Back\n");
+                        printf(" 1. View all room\n");
+                        printf(" 2. CheckIN/OUT\n");
+                        printf(" 3. Calculate Income\n");
+                        printf(" 4. View booking\n");
+                        printf(" 5. Back\n");
                         scanf("%d", &choice);
                         getchar();
-                        if(choice == 3){
-                            checkInGuest();
+
+                        if (choice == 1)
+                        {
+                            staffViewAndUpdateRoomStatus();
                         }
-                    }while(choice != 6);
+                        else if (choice == 2)
+                        {
+                            int CheckInOutChoice;
+                            do
+                            {
+                                printf("Check IN/OUT Menu\n");
+                                printf(" 1. Check IN\n");
+                                printf(" 2. Check OUT\n");
+                                printf(" 3. Back\n");
+                                scanf("%d", &CheckInOutChoice);
+                                getchar();
+                                if(CheckInOutChoice == 1){
+                                staffCheckIN();
+                                }else if (CheckInOutChoice == 2){
+                                    staffCheckOut();
+                                }
+                            } while (CheckInOutChoice != 3);
+                        }else if (choice == 3){
+                            staffCalsulateIncome();
+                        }else if (choice == 4){
+                            staffViewAndUpdateRoomStatus();
+                        }
+                    } while (choice != 5);
                 }
             }
             else if (loginChoice == 3)
@@ -177,16 +205,19 @@ int main()
                         if (userChoice == 1)
                         {
                             int bookingRoomUserChoice;
-                            do{
+                            do
+                            {
                                 printf("Booking Room\n");
                                 printf(" 1. View Room\n");
                                 printf(" 2. Book Room\n");
                                 printf(" 3. Back\n");
                                 scanf("%d", &bookingRoomUserChoice);
                                 getchar();
-                                if(bookingRoomUserChoice == 1) userViewRoom();
-                                if(bookingRoomUserChoice == 2) bookRoom();
-                            }while(bookingRoomUserChoice != 3);
+                                if (bookingRoomUserChoice == 1)
+                                    userViewRoom();
+                                if (bookingRoomUserChoice == 2)
+                                    bookRoom();
+                            } while (bookingRoomUserChoice != 3);
                         }
                         if (userChoice == 2)
                         {

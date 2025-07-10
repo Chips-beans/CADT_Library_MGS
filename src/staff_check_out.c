@@ -2,34 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "staff_check_out.h"
 
-#define MAX_LINE 256
-#define MAX_BOOKINGS 100
-#define MAX_PROMO 50
-#define BOOKINGS_FILE "bookings.csv"
-#define ROOMS_FILE "rooms.csv"
-#define PROMO_FILE "promocodes.csv"
-
-// Struct to hold booking info
-typedef struct {
-    int room_number;
-    char guest_name[100];
-    char checkin[11];
-    char checkout[11];
-    int booking_id;
-    float total_price;
-    float upfront_paid;
-} Booking;
-
-// Struct for promo code
-typedef struct {
-    char code[50];
-    int discount; // percentage
-    char expiry[11];
-} PromoCode;
 
 // Parse date string "YYYY-MM-DD" into struct tm
-int parse_date(const char *date_str, struct tm *date) {
+int parse_date_co(const char *date_str, struct tm *date) {
     return sscanf(date_str, "%4d-%2d-%2d",
                   &date->tm_year, &date->tm_mon, &date->tm_mday) == 3;
 }
@@ -77,7 +54,7 @@ int check_promocode(const char *input_code, PromoCode promos[], int promo_count)
     for (int i = 0; i < promo_count; i++) {
         if (strcasecmp(input_code, promos[i].code) == 0) {
             struct tm expiry_date = {0};
-            if (!parse_date(promos[i].expiry, &expiry_date))
+            if (!parse_date_co(promos[i].expiry, &expiry_date))
                 return 0; // invalid expiry date in file
             expiry_date.tm_year -= 1900;
             expiry_date.tm_mon -= 1;
@@ -97,7 +74,7 @@ int check_promocode(const char *input_code, PromoCode promos[], int promo_count)
 }
 
 // Update rooms.csv to set status "Free" and guest "-" for checked-out rooms
-void update_room_status(int room_number) {
+void update_room_status_co(int room_number) {
     FILE *fp = fopen(ROOMS_FILE, "r");
     FILE *temp = fopen("rooms_temp.csv", "w");
     if (!fp || !temp) {
@@ -158,7 +135,7 @@ void delete_bookings(int booking_ids[], int count) {
     rename("bookings_temp.csv", BOOKINGS_FILE);
 }
 
-int main() {
+int staffCheckOut() {
     printf("=== Staff Check-out ===\n");
     char guest_name[100];
     printf("Enter guest name for check-out: ");
@@ -172,7 +149,7 @@ int main() {
         return 1;
     }
 
-    Booking bookings[MAX_BOOKINGS];
+    BookingSCheckOUT bookings[MAX_BOOKINGS];
     int count = 0;
     char line[MAX_LINE];
     while (fgets(line, sizeof(line), fp) && count < MAX_BOOKINGS) {
@@ -261,7 +238,7 @@ int main() {
     float grand_total = 0.0f;
     for (int i = 0; i < selected_count; i++) {
         // Find booking struct by booking_id
-        Booking *b = NULL;
+        BookingSCheckOUT *b = NULL;
         for (int j = 0; j < count; j++) {
             if (bookings[j].booking_id == selected_ids[i]) {
                 b = &bookings[j];
@@ -275,7 +252,7 @@ int main() {
 
         // Check late checkout days
         struct tm co_date = {0};
-        parse_date(b->checkout, &co_date);
+        parse_date_co(b->checkout, &co_date);
         co_date.tm_year -= 1900;
         co_date.tm_mon -= 1;
         co_date.tm_isdst = -1;
@@ -321,7 +298,7 @@ int main() {
         // Find booking room number to update room status
         for (int j = 0; j < count; j++) {
             if (bookings[j].booking_id == selected_ids[i]) {
-                update_room_status(bookings[j].room_number);
+                update_room_status_co(bookings[j].room_number);
                 break;
             }
         }

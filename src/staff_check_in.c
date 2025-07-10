@@ -2,44 +2,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-#define MAX_NAME 100
-#define ROOM_STATUS_FILE "room_status.txt"
-#define BOOKING_FILE "bookings.txt"
-#define MAX_ROOMS 90
-
-typedef struct {
-    int room_number;
-    char room_type[10];
-    char status[20];
-    char guest[MAX_NAME];
-} RoomStatus;
-
-typedef struct {
-    int room_number;
-    char guest[MAX_NAME];
-    char checkin_date[11];  // YYYY-MM-DD
-    char checkout_date[11]; // YYYY-MM-DD
-    int booking_id;
-    float total_price;
-    float upfront_payment;
-} Booking;
+#include "staff_check_in.h"
 
 // Function prototypes
-int find_booking(const char *guest_name, int booking_id, Booking bookings[], int max, int *found_count);
-int load_room_status(RoomStatus rooms[], int max);
-void save_room_status(RoomStatus rooms[], int count);
+int find_booking(const char *guest_name, int booking_id, BookingSCheckIn bookings[], int max, int *found_count);
+int load_room_status(RoomStatusSCheckIn rooms[], int max);
+void save_room_status(RoomStatusSCheckIn rooms[], int count);
 int generate_booking_id();
-int assign_rooms(RoomStatus rooms[], int room_count, int single_req, int double_req, int checkin_year, int checkin_month, int checkin_day, int checkout_year, int checkout_month, int checkout_day, char guest_name[], Booking bookings[], int *booking_count);
+int assign_rooms(RoomStatusSCheckIn rooms[], int room_count, int single_req, int double_req, int checkin_year, int checkin_month, int checkin_day, int checkout_year, int checkout_month, int checkout_day, char guest_name[], BookingSCheckIn bookings[], int *booking_count);
 
-int main() {
+int staffCheckIN()
+{
     char choice;
     printf("=== Staff Check-in ===\n");
     printf("Has the guest booked before? (Y/N): ");
     scanf(" %c", &choice);
     getchar(); // consume newline
 
-    if (choice == 'Y' || choice == 'y') {
+    if (choice == 'Y' || choice == 'y')
+    {
         char guest_name[MAX_NAME];
         int booking_id;
         printf("Enter guest name: ");
@@ -48,33 +29,41 @@ int main() {
         printf("Enter booking ID: ");
         scanf("%d", &booking_id);
 
-        Booking bookings[100];
+        BookingSCheckIn bookings[100];
         int found_count = 0;
-        if (!find_booking(guest_name, booking_id, bookings, 100, &found_count)) {
+        if (!find_booking(guest_name, booking_id, bookings, 100, &found_count))
+        {
             printf("No matching booking found for %s with ID %d.\n", guest_name, booking_id);
             return 1;
         }
 
         printf("Booking(s) found for %s:\n", guest_name);
-        for (int i = 0; i < found_count; i++) {
+        for (int i = 0; i < found_count; i++)
+        {
             printf("Room %d from %s to %s\n",
                    bookings[i].room_number, bookings[i].checkin_date, bookings[i].checkout_date);
         }
 
-        RoomStatus rooms[100];
+        RoomStatusSCheckIn rooms[100];
         int room_count = load_room_status(rooms, 100);
-
         int any_occupied = 0;
-        for (int i = 0; i < found_count; i++) {
+        for (int i = 0; i < found_count; i++)
+        {
             int rn = bookings[i].room_number;
             int found_room = 0;
-            for (int j = 0; j < room_count; j++) {
-                if (rooms[j].room_number == rn) {
+
+            for (int j = 0; j < room_count; j++)
+            {
+                if (rooms[j].room_number == rn)
+                {
                     found_room = 1;
-                    if (strcmp(rooms[j].status, "Occupied") == 0) {
+                    if (strcmp(rooms[j].status, "Occupied") == 0)
+                    {
                         printf("Room %d already checked in.\n", rn);
                         any_occupied = 1;
-                    } else {
+                    }
+                    else
+                    {
                         strcpy(rooms[j].status, "Occupied");
                         strcpy(rooms[j].guest, guest_name);
                         printf("Room %d checked in.\n", rn);
@@ -83,15 +72,17 @@ int main() {
                     break;
                 }
             }
-            if (!found_room) {
+            if (!found_room)
+            {
                 printf("Room %d not found in room status file.\n", rn);
             }
         }
 
         if (any_occupied)
             save_room_status(rooms, room_count);
-
-    } else if (choice == 'N' || choice == 'n') {
+    }
+    else if (choice == 'N' || choice == 'n')
+    {
         // New booking flow inside staff check-in
 
         char guest_name[MAX_NAME];
@@ -102,7 +93,7 @@ int main() {
         int today = tm.tm_mday;
         int this_month = tm.tm_mon + 1;
         int this_year = tm.tm_year + 1900;
-        int days_in_month[] = {0,31,28,31,30,31,30,31,31,30,31,30,31};
+        int days_in_month[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
         // Leap year check
         if ((this_year % 4 == 0 && this_year % 100 != 0) || (this_year % 400 == 0))
@@ -113,7 +104,8 @@ int main() {
         guest_name[strcspn(guest_name, "\n")] = 0;
 
         // Room counts input
-        do {
+        do
+        {
             printf("Number of single rooms to book: ");
             scanf("%d", &single_rooms);
             printf("Number of double rooms to book: ");
@@ -122,12 +114,14 @@ int main() {
                 printf("You must book at least one room.\n");
         } while (single_rooms < 0 || double_rooms < 0 || (single_rooms + double_rooms == 0));
 
-        do {
+        do
+        {
             printf("Number of nights: ");
             scanf("%d", &nights);
         } while (nights <= 0);
 
-        do {
+        do
+        {
             printf("Check-in month (1-12): ");
             scanf("%d", &checkin_month);
         } while (checkin_month < 1 || checkin_month > 12);
@@ -138,7 +132,8 @@ int main() {
         else
             days_in_month[2] = 28;
 
-        do {
+        do
+        {
             printf("Check-in day (1-%d): ", days_in_month[checkin_month]);
             scanf("%d", &checkin_day);
         } while (checkin_day < 1 || checkin_day > days_in_month[checkin_month]);
@@ -160,10 +155,10 @@ int main() {
         int checkout_year = checkin_tm.tm_year + 1900;
 
         // Load rooms and assign
-        RoomStatus rooms[MAX_ROOMS];
-        int room_count = load_room_status(rooms, MAX_ROOMS);
+        RoomStatusSCheckIn rooms[MAX_ROOMS_STAFF_CHECK_IN];
+        int room_count = load_room_status(rooms, MAX_ROOMS_STAFF_CHECK_IN);
 
-        Booking new_bookings[20];
+        BookingSCheckIn new_bookings[20];
         int booking_count = 0;
 
         int assigned_count = assign_rooms(rooms, room_count, single_rooms, double_rooms,
@@ -171,18 +166,21 @@ int main() {
                                           checkout_year, checkout_month, checkout_day,
                                           guest_name, new_bookings, &booking_count);
 
-        if (assigned_count == 0) {
+        if (assigned_count == 0)
+        {
             printf("No rooms available to assign. Booking failed.\n");
             return 1;
         }
 
         // Save booking info to bookings.txt
-        FILE *fpb = fopen(BOOKING_FILE, "a");
-        if (!fpb) {
+        FILE *fpb = fopen(BOOKING_FILE_STAFF_CHECKIN, "a");
+        if (!fpb)
+        {
             printf("Error saving bookings.\n");
             return 1;
         }
-        for (int i = 0; i < booking_count; i++) {
+        for (int i = 0; i < booking_count; i++)
+        {
             fprintf(fpb, "%d,%s,%s,%s,%d,%.2f,%.2f\n",
                     new_bookings[i].room_number, new_bookings[i].guest,
                     new_bookings[i].checkin_date, new_bookings[i].checkout_date,
@@ -195,10 +193,13 @@ int main() {
         save_room_status(rooms, room_count);
 
         printf("\nBooking successful! Rooms assigned:\n");
-        for (int i = 0; i < booking_count; i++) {
+        for (int i = 0; i < booking_count; i++)
+        {
             printf("Room %d (%s)\n", new_bookings[i].room_number, rooms[i].room_type);
         }
-    } else {
+    }
+    else
+    {
         printf("Invalid choice.\n");
         return 1;
     }
@@ -208,18 +209,23 @@ int main() {
 
 // --- FUNCTIONS IMPLEMENTATION ---
 
-int find_booking(const char *guest_name, int booking_id, Booking bookings[], int max, int *found_count) {
-    FILE *fp = fopen(BOOKING_FILE, "r");
-    if (!fp) return 0;
+int find_booking(const char *guest_name, int booking_id, BookingSCheckIn bookings[], int max, int *found_count)
+{
+    FILE *fp = fopen(BOOKING_FILE_STAFF_CHECKIN, "r");
+    if (!fp)
+        return 0;
 
     char line[256];
     int count = 0;
-    while (fgets(line, sizeof(line), fp) && count < max) {
-        Booking b;
+    while (fgets(line, sizeof(line), fp) && count < max)
+    {
+        BookingSCheckIn b;
         if (sscanf(line, "%d,%99[^,],%10[^,],%10[^,],%d,%f,%f",
                    &b.room_number, b.guest, b.checkin_date, b.checkout_date,
-                   &b.booking_id, &b.total_price, &b.upfront_payment) == 7) {
-            if (strcmp(b.guest, guest_name) == 0 && b.booking_id == booking_id) {
+                   &b.booking_id, &b.total_price, &b.upfront_payment) == 7)
+        {
+            if (strcmp(b.guest, guest_name) == 0 && b.booking_id == booking_id)
+            {
                 bookings[count++] = b;
             }
         }
@@ -229,16 +235,26 @@ int find_booking(const char *guest_name, int booking_id, Booking bookings[], int
     return count > 0;
 }
 
-int load_room_status(RoomStatus rooms[], int max) {
+int load_room_status(RoomStatusSCheckIn rooms[], int max)
+{
     FILE *fp = fopen(ROOM_STATUS_FILE, "r");
-    if (!fp) return 0;
-
+    if (!fp)
+    {
+        printf("Failed to open %s\n", ROOM_STATUS_FILE);
+        return 0;
+    }
     int count = 0;
     char line[256];
-    while (fgets(line, sizeof(line), fp) && count < max) {
-        RoomStatus r;
-        if (sscanf(line, "%d,%9[^,],%19[^,],%99[^\n]",
-                   &r.room_number, r.room_type, r.status, r.guest) == 4) {
+    fgets(line, sizeof(line), fp); // skip header
+
+    while (fgets(line, sizeof(line), fp) && count < max)
+    {
+        RoomStatusSCheckIn r;
+        int fields = sscanf(line, "%d,%9[^,],%19[^,],%[^,]",
+                            &r.room_number, r.room_type, r.status, r.guest
+                            );
+        if (fields == 4)
+        {
             rooms[count++] = r;
         }
     }
@@ -246,31 +262,38 @@ int load_room_status(RoomStatus rooms[], int max) {
     return count;
 }
 
-void save_room_status(RoomStatus rooms[], int count) {
+void save_room_status(RoomStatusSCheckIn rooms[], int count)
+{
     FILE *fp = fopen(ROOM_STATUS_FILE, "w");
-    if (!fp) {
+    if (!fp)
+    {
         printf("Error writing room status file.\n");
         return;
     }
-    for (int i = 0; i < count; i++) {
-        fprintf(fp, "%d,%s,%s,%s\n",
+    for (int i = 0; i < count; i++)
+    {
+        fprintf(fp, "%d,%s,%s,%s,%s,%s\n",
                 rooms[i].room_number, rooms[i].room_type,
-                rooms[i].status, rooms[i].guest);
+                rooms[i].status, rooms[i].guest,rooms[i].status_start,rooms[i].status_end);
     }
     fclose(fp);
 }
 
-int generate_booking_id() {
+int generate_booking_id()
+{
     FILE *fp = fopen("last_booking_id.txt", "r");
     int id = 999;
-    if (fp) {
+    if (fp)
+    {
         fscanf(fp, "%d", &id);
         fclose(fp);
     }
     id++;
-    if (id > 9999) id = 1000;
+    if (id > 9999)
+        id = 1000;
     fp = fopen("last_booking_id.txt", "w");
-    if (fp) {
+    if (fp)
+    {
         fprintf(fp, "%d", id);
         fclose(fp);
     }
@@ -278,10 +301,11 @@ int generate_booking_id() {
 }
 
 // Assign rooms, update status, fill Booking array, return assigned count
-int assign_rooms(RoomStatus rooms[], int room_count, int single_req, int double_req,
+int assign_rooms(RoomStatusSCheckIn rooms[], int room_count, int single_req, int double_req,
                  int checkin_year, int checkin_month, int checkin_day,
                  int checkout_year, int checkout_month, int checkout_day,
-                 char guest_name[], Booking bookings[], int *booking_count) {
+                 char guest_name[], BookingSCheckIn bookings[], int *booking_count)
+{
     int assigned = 0;
     int single_left = single_req;
     int double_left = double_req;
@@ -292,16 +316,20 @@ int assign_rooms(RoomStatus rooms[], int room_count, int single_req, int double_
     snprintf(checkin_date, sizeof(checkin_date), "%04d-%02d-%02d", checkin_year, checkin_month, checkin_day);
     snprintf(checkout_date, sizeof(checkout_date), "%04d-%02d-%02d", checkout_year, checkout_month, checkout_day);
 
-    for (int floor = 1; floor <= 9 && (single_left > 0 || double_left > 0); floor++) {
-        for (int i = 0; i < 10; i++) {
-            int idx = (floor -1)*10 + i;
-            if (idx >= room_count) break;
-            if (single_left > 0 && i <= 4 && strcmp(rooms[idx].status, "Free") == 0) {
+    for (int floor = 1; floor <= 9 && (single_left > 0 || double_left > 0); floor++)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            int idx = (floor - 1) * 10 + i;
+            if (idx >= room_count)
+                break;
+            if (single_left > 0 && i <= 4 && strcmp(rooms[idx].status, "Free") == 0)
+            {
                 rooms[idx].status[0] = 0;
                 strcpy(rooms[idx].status, "Occupied");
                 strcpy(rooms[idx].guest, guest_name);
 
-                Booking b;
+                BookingSCheckIn b;
                 b.room_number = rooms[idx].room_number;
                 strcpy(b.guest, guest_name);
                 strcpy(b.checkin_date, checkin_date);
@@ -315,12 +343,13 @@ int assign_rooms(RoomStatus rooms[], int room_count, int single_req, int double_
                 single_left--;
                 assigned++;
             }
-            else if (double_left > 0 && i >= 5 && strcmp(rooms[idx].status, "Free") == 0) {
+            else if (double_left > 0 && i >= 5 && strcmp(rooms[idx].status, "Free") == 0)
+            {
                 rooms[idx].status[0] = 0;
                 strcpy(rooms[idx].status, "Occupied");
                 strcpy(rooms[idx].guest, guest_name);
 
-                Booking b;
+                BookingSCheckIn b;
                 b.room_number = rooms[idx].room_number;
                 strcpy(b.guest, guest_name);
                 strcpy(b.checkin_date, checkin_date);
@@ -334,7 +363,8 @@ int assign_rooms(RoomStatus rooms[], int room_count, int single_req, int double_
                 double_left--;
                 assigned++;
             }
-            if (single_left == 0 && double_left == 0) break;
+            if (single_left == 0 && double_left == 0)
+                break;
         }
     }
     return assigned;

@@ -2,21 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-#define BOOKING_FILE "bookings.csv"
-#define REPORT_FILE "income_report.csv"
-
-typedef struct {
-    int room_number;
-    char guest_name[100];
-    char checkin_date[11];   // YYYY-MM-DD
-    char checkout_date[11];  // YYYY-MM-DD
-    int booking_id;
-    double total_price;
-    double upfront_payment;
-} Booking;
-
-int parse_date(const char *date_str, struct tm *date_tm) {
+#include "staff_income.h"
+int parse_date_i(const char *date_str, struct tm *date_tm) {
     return sscanf(date_str, "%d-%d-%d",
         &date_tm->tm_year, &date_tm->tm_mon, &date_tm->tm_mday) == 3;
 }
@@ -24,7 +11,7 @@ int parse_date(const char *date_str, struct tm *date_tm) {
 // Convert YYYY-MM-DD string to time_t
 time_t date_to_time(const char *date_str) {
     struct tm tm = {0};
-    if (!parse_date(date_str, &tm)) return -1;
+    if (!parse_date_i(date_str, &tm)) return -1;
     tm.tm_year -= 1900;  // tm_year is years since 1900
     tm.tm_mon -= 1;      // tm_mon is 0-11
     tm.tm_hour = 0;
@@ -64,7 +51,7 @@ void get_date_input(struct tm *date_tm) {
     date_tm->tm_sec = 0;
 }
 
-int main() {
+int staffCalsulateIncome() {
     FILE *fp = fopen(BOOKING_FILE, "r");
     if (!fp) {
         printf("Error: Could not open %s\n", BOOKING_FILE);
@@ -135,11 +122,11 @@ int main() {
 
     // Read bookings
     char line[512];
-    Booking bookings[1000];
+    BookingSIncome bookings[1000];
     int count = 0;
 
     while (fgets(line, sizeof(line), fp)) {
-        Booking b;
+        BookingSIncome b;
         char total_price_str[20], upfront_str[20];
         // Format:
         // room_number,guest_name,checkin_date,checkout_date,booking_id,total_price,upfront_payment
@@ -170,7 +157,7 @@ int main() {
     printf("Total income for selected period: $%.2f\n", total_income);
 
     // Write report
-    FILE *rpt = fopen(REPORT_FILE, "w");
+    FILE *rpt = fopen(REPORT_FILE_STAFF_INCOME, "w");
     if (!rpt) {
         printf("Error creating report file.\n");
         return 1;
@@ -182,7 +169,7 @@ int main() {
     fprintf(rpt, "Total Income,%.2f\n", total_income);
     fclose(rpt);
 
-    printf("Report saved to %s\n", REPORT_FILE);
+    printf("Report saved to %s\n", REPORT_FILE_STAFF_INCOME);
 
     return 0;
 }

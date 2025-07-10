@@ -2,21 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "staff_viewandupdate_room.h"
 
-#define MAX_ROOMS 100
-#define MAX_LINE 256
-
-typedef struct
-{
-    int room_number;
-    char room_type[10]; // "Single" or "Double"
-    char status[10];    // "Free", "Occupied", "Down"
-    char guest_name[50];
-    char status_start[11]; // YYYY-MM-DD or empty
-    char status_end[11];   // YYYY-MM-DD or empty
-} RoomStatus;
-
-int parse_date(const char *date_str, struct tm *date_tm)
+int parse_date_vu(const char *date_str, struct tm *date_tm)
 {
     if (strlen(date_str) != 10)
         return 0;
@@ -38,7 +26,7 @@ int date_in_range(struct tm check_date, struct tm start_date, struct tm end_date
     return (t_check >= t_start && t_check <= t_end);
 }
 
-int load_rooms(RoomStatus rooms[], int *count)
+int load_rooms(RoomStatusVU rooms[], int *count)
 {
     FILE *fp = fopen("rooms.csv", "r");
     if (!fp)
@@ -50,7 +38,7 @@ int load_rooms(RoomStatus rooms[], int *count)
     int idx = 0;
     // Skip header line if you have one, or comment this out if no header:
     fgets(line, sizeof(line), fp);
-    while (fgets(line, sizeof(line), fp) && idx < MAX_ROOMS)
+    while (fgets(line, sizeof(line), fp) && idx < MAX_ROOMS_VIEW_AND_UPDATE)
     {
         char *token = strtok(line, ",");
         if (!token)
@@ -100,7 +88,7 @@ int load_rooms(RoomStatus rooms[], int *count)
     return 1;
 }
 
-void save_rooms(RoomStatus rooms[], int count)
+void save_rooms(RoomStatusVU rooms[], int count)
 {
     FILE *fp = fopen("rooms.csv", "w");
     if (!fp)
@@ -123,10 +111,10 @@ void save_rooms(RoomStatus rooms[], int count)
     fclose(fp);
 }
 
-void print_rooms_for_date(RoomStatus rooms[], int count, const char *date_str)
+void print_rooms_for_date(RoomStatusVU rooms[], int count, const char *date_str)
 {
     struct tm check_date = {0};
-    if (!parse_date(date_str, &check_date))
+    if (!parse_date_vu(date_str, &check_date))
     {
         printf("Invalid date format.\n");
         return;
@@ -141,8 +129,8 @@ void print_rooms_for_date(RoomStatus rooms[], int count, const char *date_str)
         if (strcmp(rooms[i].status, "Down") == 0 && strlen(rooms[i].status_start) > 0 && strlen(rooms[i].status_end) > 0)
         {
             struct tm start_date = {0}, end_date = {0};
-            parse_date(rooms[i].status_start, &start_date);
-            parse_date(rooms[i].status_end, &end_date);
+            parse_date_vu(rooms[i].status_start, &start_date);
+            parse_date_vu(rooms[i].status_end, &end_date);
             if (date_in_range(check_date, start_date, end_date))
                 is_down = 1;
         }
@@ -157,7 +145,7 @@ void print_rooms_for_date(RoomStatus rooms[], int count, const char *date_str)
     }
 }
 
-void update_room_status(RoomStatus rooms[], int count, const char *date_str)
+void update_room_status_vu(RoomStatusVU rooms[], int count, const char *date_str)
 {
     int room_to_update;
     char new_status[10];
@@ -194,7 +182,7 @@ void update_room_status(RoomStatus rooms[], int count, const char *date_str)
         scanf("%s", end_date);
 
         struct tm tmp;
-        if (!parse_date(start_date, &tmp) || !parse_date(end_date, &tmp))
+        if (!parse_date_vu(start_date, &tmp) || !parse_date_vu(end_date, &tmp))
         {
             printf("Invalid date format.\n");
             return;
@@ -220,9 +208,9 @@ void update_room_status(RoomStatus rooms[], int count, const char *date_str)
     }
 }
 
-int main()
+int staffViewAndUpdateRoomStatus()
 {
-    RoomStatus rooms[MAX_ROOMS];
+    RoomStatusVU rooms[MAX_ROOMS_VIEW_AND_UPDATE];
     int room_count = 0;
     char input_date[11];
     int choice;
@@ -243,7 +231,7 @@ int main()
 
     if (choice == 1)
     {
-        update_room_status(rooms, room_count, input_date);
+        update_room_status_vu(rooms, room_count, input_date);
         save_rooms(rooms, room_count);
     }
 

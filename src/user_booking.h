@@ -4,7 +4,6 @@
 
 #define MAX_NAME 100
 #define ROOM_FILE "bookings.csv"
-#define MAX_ROOMS 90
 typedef struct 
 {
     char name[MAX_NAME];
