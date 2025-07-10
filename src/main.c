@@ -81,8 +81,7 @@ int main()
                         printf(" 1. View all room\n");
                         printf(" 2. CheckIN/OUT\n");
                         printf(" 3. Calculate Income\n");
-                        printf(" 4. View booking\n");
-                        printf(" 5. Back\n");
+                        printf(" 4. Back\n");
                         scanf("%d", &choice);
                         getchar();
 
@@ -109,10 +108,8 @@ int main()
                             } while (CheckInOutChoice != 3);
                         }else if (choice == 3){
                             staffCalsulateIncome();
-                        }else if (choice == 4){
-                            staffViewAndUpdateRoomStatus();
                         }
-                    } while (choice != 5);
+                    } while (choice != 4);
                 }
             }
             else if (loginChoice == 3)
