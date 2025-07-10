@@ -46,20 +46,33 @@ int main()
                     printf("                                        Please enter your Staff ID, password, confirm password, email address, and phone number.\n");
                     printf("                                            Staff ID: ");
                     scanf("%s", staff.staffID);
+
                     if (strncmp(staff.staffID, "IDTB11", 6) != 0)
                     {
                         printf("Invalid Staff ID.\n");
                         continue;
                     }
+
                     printf("                                            Password: ");
                     scanf("%s", staff.password);
                     printf("                                            Confirm Password: ");
                     scanf("%s", staff.confirmPassword);
+
+                    if (strcmp(staff.password, staff.confirmPassword) != 0)
+                    {
+                        printf("Passwords do not match.\n");
+                        continue;
+                    }
+
                     printf("                                            Email Address: ");
                     scanf("%s", staff.emailAddress);
                     printf("                                            Phone Number: ");
                     scanf("%s", staff.phoneNumber);
-                } while (strcmp(staff.password, staff.confirmPassword) != 0);
+
+                    break;
+
+                } while (1);
+
                 createAccountStaff(staff);
             }
             else if (loginChoice == 1)
@@ -100,13 +113,18 @@ int main()
                                 printf(" 3. Back\n");
                                 scanf("%d", &CheckInOutChoice);
                                 getchar();
-                                if(CheckInOutChoice == 1){
-                                staffCheckIN();
-                                }else if (CheckInOutChoice == 2){
+                                if (CheckInOutChoice == 1)
+                                {
+                                    staffCheckIN();
+                                }
+                                else if (CheckInOutChoice == 2)
+                                {
                                     staffCheckOut();
                                 }
                             } while (CheckInOutChoice != 3);
-                        }else if (choice == 3){
+                        }
+                        else if (choice == 3)
+                        {
                             staffCalsulateIncome();
                         }
                     } while (choice != 4);
