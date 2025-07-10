@@ -5,7 +5,7 @@
 #include <ctype.h>
 #include "checkIn.h"
 #include "user_booking.h"
-
+#include "updateFile.h"
 int readCheckInFromCSV(FILE *file, CheckIN *booking)
 {
     char line[256];
@@ -118,6 +118,7 @@ int checkIn()
                 printf(" Check-in Date: %04d-%02d-%02d\n",
                        booking.checkInYear, booking.checkInMonth, booking.checkInDay);
                 printf("=====================================\n");
+                updateRoomStatus("rooms.csv", booking.roomNumber, "Occupied");
             }
             else
             {
@@ -150,7 +151,7 @@ int checkInGuest()
     }
     else if (choice == 'N')
     {
-        bookRoom();
+        staffBookRoom();
         checkIn();
     }
     return 0;
