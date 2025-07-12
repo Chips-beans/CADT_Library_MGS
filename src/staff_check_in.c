@@ -14,8 +14,10 @@ int assign_rooms(RoomStatusSCheckIn rooms[], int room_count, int single_req, int
 int staffCheckIN()
 {
     char choice;
-    printf("=== Staff Check-in ===\n");
-    printf("Has the guest booked before? (Y/N): ");
+    printf("================================================================================\n");
+    printf("                              === Staff Check-in ===                            \n");
+    printf("================================================================================\n");
+    printf("                         Has the guest booked before? (Y/N): ");
     scanf(" %c", &choice);
     getchar(); // consume newline
 
@@ -23,24 +25,32 @@ int staffCheckIN()
     {
         char guest_name[MAX_NAME];
         int booking_id;
-        printf("Enter guest name: ");
+        printf("================================================================================\n");
+        printf("                                  Enter guest name:                             \n");
+        printf("================================================================================\n");
         fgets(guest_name, sizeof(guest_name), stdin);
         guest_name[strcspn(guest_name, "\n")] = 0;
-        printf("Enter booking ID: ");
+        printf("================================================================================\n");
+        printf("                                 Enter booking ID:                             \n");
+        printf("================================================================================\n");
         scanf("%d", &booking_id);
 
         BookingSCheckIn bookings[100];
         int found_count = 0;
         if (!find_booking(guest_name, booking_id, bookings, 100, &found_count))
         {
-            printf("No matching booking found for %s with ID %d.\n", guest_name, booking_id);
+            printf("================================================================================\n");
+            printf("                    No matching booking found for %s with ID %d.               \n", guest_name, booking_id);
+            printf("================================================================================\n");
             return 1;
         }
 
-        printf("Booking(s) found for %s:\n", guest_name);
+        printf("================================================================================\n");
+        printf("                            Booking(s) found for %s:                            \n", guest_name);
+        printf("================================================================================\n");
         for (int i = 0; i < found_count; i++)
         {
-            printf("Room %d from %s to %s\n",
+            printf("                         Room %d from %s to %s                             \n",
                    bookings[i].room_number, bookings[i].checkin_date, bookings[i].checkout_date);
         }
 
@@ -59,14 +69,18 @@ int staffCheckIN()
                     found_room = 1;
                     if (strcmp(rooms[j].status, "Occupied") == 0)
                     {
-                        printf("Room %d already checked in.\n", rn);
+                        printf("================================================================================\n");
+                        printf("                               Room %d already checked in.                       \n", rn);
+                        printf("================================================================================\n");
                         any_occupied = 1;
                     }
                     else
                     {
                         strcpy(rooms[j].status, "Occupied");
                         strcpy(rooms[j].guest, guest_name);
-                        printf("Room %d checked in.\n", rn);
+                        printf("================================================================================\n");
+                        printf("                                 Room %d checked in.                             \n", rn);
+                        printf("================================================================================\n");
                         any_occupied = 1;
                     }
                     break;
@@ -74,7 +88,9 @@ int staffCheckIN()
             }
             if (!found_room)
             {
-                printf("Room %d not found in room status file.\n", rn);
+                printf("================================================================================\n");
+                printf("                            Room %d not found in room status file.               \n", rn);
+                printf("================================================================================\n");
             }
         }
 
@@ -99,30 +115,44 @@ int staffCheckIN()
         if ((this_year % 4 == 0 && this_year % 100 != 0) || (this_year % 400 == 0))
             days_in_month[2] = 29;
 
-        printf("Enter guest name: ");
+        printf("================================================================================\n");
+        printf("                                 Enter guest name:                             \n");
+        printf("================================================================================\n");
         fgets(guest_name, sizeof(guest_name), stdin);
         guest_name[strcspn(guest_name, "\n")] = 0;
 
         // Room counts input
         do
         {
-            printf("Number of single rooms to book: ");
+            printf("================================================================================\n");
+            printf("                        Number of single rooms to book:                        \n");
+            printf("================================================================================\n");
             scanf("%d", &single_rooms);
-            printf("Number of double rooms to book: ");
+            printf("================================================================================\n");
+            printf("                        Number of double rooms to book:                        \n");
+            printf("================================================================================\n");
             scanf("%d", &double_rooms);
             if (single_rooms < 0 || double_rooms < 0 || (single_rooms + double_rooms == 0))
-                printf("You must book at least one room.\n");
+            {
+                printf("================================================================================\n");
+                printf("                          You must book at least one room.                    \n");
+                printf("================================================================================\n");
+            }
         } while (single_rooms < 0 || double_rooms < 0 || (single_rooms + double_rooms == 0));
 
         do
         {
-            printf("Number of nights: ");
+            printf("================================================================================\n");
+            printf("                               Number of nights:                              \n");
+            printf("================================================================================\n");
             scanf("%d", &nights);
         } while (nights <= 0);
 
         do
         {
-            printf("Check-in month (1-12): ");
+            printf("================================================================================\n");
+            printf("                               Check-in month (1-12):                        \n");
+            printf("================================================================================\n");
             scanf("%d", &checkin_month);
         } while (checkin_month < 1 || checkin_month > 12);
 
@@ -134,7 +164,9 @@ int staffCheckIN()
 
         do
         {
-            printf("Check-in day (1-%d): ", days_in_month[checkin_month]);
+            printf("================================================================================\n");
+            printf("                            Check-in day (1-%d):                             \n", days_in_month[checkin_month]);
+            printf("================================================================================\n");
             scanf("%d", &checkin_day);
         } while (checkin_day < 1 || checkin_day > days_in_month[checkin_month]);
 
@@ -168,7 +200,9 @@ int staffCheckIN()
 
         if (assigned_count == 0)
         {
-            printf("No rooms available to assign. Booking failed.\n");
+            printf("================================================================================\n");
+            printf("                         No rooms available to assign. Booking failed.          \n");
+            printf("================================================================================\n");
             return 1;
         }
 
@@ -176,7 +210,9 @@ int staffCheckIN()
         FILE *fpb = fopen(BOOKING_FILE_STAFF_CHECKIN, "a");
         if (!fpb)
         {
-            printf("Error saving bookings.\n");
+            printf("================================================================================\n");
+            printf("                             Error saving bookings.                            \n");
+            printf("================================================================================\n");
             return 1;
         }
         for (int i = 0; i < booking_count; i++)
@@ -192,15 +228,19 @@ int staffCheckIN()
         // Save updated room status
         save_room_status(rooms, room_count);
 
-        printf("\nBooking successful! Rooms assigned:\n");
+        printf("================================================================================\n");
+        printf("                          Booking successful! Rooms assigned:                   \n");
+        printf("================================================================================\n");
         for (int i = 0; i < booking_count; i++)
         {
-            printf("Room %d (%s)\n", new_bookings[i].room_number, rooms[i].room_type);
+            printf("                              Room %d (%s)                                   \n", new_bookings[i].room_number, rooms[i].room_type);
         }
     }
     else
     {
-        printf("Invalid choice.\n");
+        printf("================================================================================\n");
+        printf("                                Invalid choice.                                \n");
+        printf("================================================================================\n");
         return 1;
     }
 

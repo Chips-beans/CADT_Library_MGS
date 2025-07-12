@@ -3,20 +3,22 @@
 #include <string.h>
 #include <time.h>
 #include "staff_income.h"
+
 int parse_date_i(const char *date_str, struct tm *date_tm) {
-    return sscanf(date_str, "%d-%d-%d",
-        &date_tm->tm_year, &date_tm->tm_mon, &date_tm->tm_mday) == 3;
+    if (sscanf(date_str, "%4d-%2d-%2d", &date_tm->tm_year, &date_tm->tm_mon, &date_tm->tm_mday) != 3)
+        return 0;
+    date_tm->tm_year -= 1900;
+    date_tm->tm_mon -= 1;
+    date_tm->tm_hour = 0;
+    date_tm->tm_min = 0;
+    date_tm->tm_sec = 0;
+    return 1;
 }
 
 // Convert YYYY-MM-DD string to time_t
 time_t date_to_time(const char *date_str) {
     struct tm tm = {0};
     if (!parse_date_i(date_str, &tm)) return -1;
-    tm.tm_year -= 1900;  // tm_year is years since 1900
-    tm.tm_mon -= 1;      // tm_mon is 0-11
-    tm.tm_hour = 0;
-    tm.tm_min = 0;
-    tm.tm_sec = 0;
     return mktime(&tm);
 }
 
@@ -49,6 +51,8 @@ void get_date_input(struct tm *date_tm) {
     date_tm->tm_hour = 0;
     date_tm->tm_min = 0;
     date_tm->tm_sec = 0;
+    // Flush leftover newline
+    int c; while ((c = getchar()) != '\n' && c != EOF);
 }
 
 int staffCalsulateIncome() {
@@ -61,11 +65,14 @@ int staffCalsulateIncome() {
     int choice;
     print_menu();
     scanf("%d", &choice);
+    int c; while ((c = getchar()) != '\n' && c != EOF); // flush newline
 
     struct tm input_date = {0};
     time_t start_period = 0, end_period = 0;
 
     time_t now = time(NULL);
+
+    int year, month;
 
     switch(choice) {
         case 1: // Daily
@@ -86,10 +93,12 @@ int staffCalsulateIncome() {
             break;
         case 3: // Monthly
             printf("Enter year (e.g., 2025): ");
-            int year, month;
             scanf("%d", &year);
             printf("Enter month (1-12): ");
             scanf("%d", &month);
+            // Flush newline
+            while ((c = getchar()) != '\n' && c != EOF);
+
             input_date.tm_year = year - 1900;
             input_date.tm_mon = month - 1;
             input_date.tm_mday = 1;
@@ -102,6 +111,8 @@ int staffCalsulateIncome() {
         case 4: // Yearly
             printf("Enter year (e.g., 2025): ");
             scanf("%d", &year);
+            while ((c = getchar()) != '\n' && c != EOF);
+
             input_date.tm_year = year - 1900;
             input_date.tm_mon = 0;
             input_date.tm_mday = 1;
@@ -130,7 +141,7 @@ int staffCalsulateIncome() {
         char total_price_str[20], upfront_str[20];
         // Format:
         // room_number,guest_name,checkin_date,checkout_date,booking_id,total_price,upfront_payment
-        if (sscanf(line, "%d,%99[^,],%10[^,],%10[^,],%d,%19[^,],%19s",
+        if (sscanf(line, "%d,%99[^,],%10[^,],%10[^,],%d,%19[^,],%19[^,]",
             &b.room_number, b.guest_name, b.checkin_date, b.checkout_date,
             &b.booking_id, total_price_str, upfront_str) == 7) {
             
@@ -163,9 +174,14 @@ int staffCalsulateIncome() {
         return 1;
     }
 
+    char *start_str = ctime(&start_period);
+    start_str[strcspn(start_str, "\n")] = 0;
+    char *end_str = ctime(&end_period);
+    end_str[strcspn(end_str, "\n")] = 0;
+
     fprintf(rpt, "Income Report\n");
-    fprintf(rpt, "Period Start,%s\n", ctime(&start_period));
-    fprintf(rpt, "Period End,%s\n", ctime(&end_period));
+    fprintf(rpt, "Period Start,%s\n", start_str);
+    fprintf(rpt, "Period End,%s\n", end_str);
     fprintf(rpt, "Total Income,%.2f\n", total_income);
     fclose(rpt);
 

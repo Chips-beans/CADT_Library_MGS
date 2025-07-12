@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include "updateFile.h"
 #define MAX_LINE 256
 
 void updateRoomStatus(const char *filename, int targetRoomID, const char *newStatus) {
