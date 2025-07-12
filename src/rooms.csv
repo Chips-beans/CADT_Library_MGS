@@ -1,18 +1,19 @@
-104,Single,Occupied,Say Kokann,,1
-105,Double,Occupied,nunn,,1
-106,Double,Occupied,nunn,,1
+100,Single,Free,-
+101,Single,Occupied,Say Kokann,-,|¨Žû
+102,Single,Occupied,Say Kokann,-,|¨Žû
+103,Single,Occupied,Say Kokann,-,|¨Žû
+104,Single,Occupied,Say Kokann,-,|¨Žû
+105,Double,Occupied,Chhim Soksambath,-,|¨Žû
+106,Double,Occupied,Chhim Soksambath,-,|¨Žû
 107,Double,Free,-
 107,Double,Free,-
 108,Double,Free,-
 108,Double,Free,-
 109,Double,Free,-
 109,Double,Free,-
-200,Single,Free,-
-200,Single,Free,-
-201,Single,Free,-
-201,Single,Free,-
-202,Single,Free,-
-202,Single,Free,-
+200,Single,Occupied,Chhim Soksambath,-,|¨Žû
+201,Single,Occupied,Chhim Soksambath,-,|¨Žû
+202,Single,Occupied,Chhim Soksambath,-,|¨Žû
 203,Single,Free,-
 203,Single,Free,-
 204,Single,Free,-
@@ -163,5 +164,8 @@
 906,Double,Free,-
 907,Double,Free,-
 907,Double,Free,-
-908,Double,Free,-,,1
-909,Double,Down,-,,1
+908,Double,Free,-
+908,Double,Free,-
+909,Double,Free,-
+909,Double,Free,-
+909,Double,Down,-,-,|¨Žû

@@ -285,14 +285,12 @@ int load_room_status(RoomStatusSCheckIn rooms[], int max)
     }
     int count = 0;
     char line[256];
-    fgets(line, sizeof(line), fp); // skip header
 
     while (fgets(line, sizeof(line), fp) && count < max)
     {
         RoomStatusSCheckIn r;
         int fields = sscanf(line, "%d,%9[^,],%19[^,],%[^,]",
-                            &r.room_number, r.room_type, r.status, r.guest
-                            );
+                            &r.room_number, r.room_type, r.status, r.guest);
         if (fields == 4)
         {
             rooms[count++] = r;
@@ -312,9 +310,24 @@ void save_room_status(RoomStatusSCheckIn rooms[], int count)
     }
     for (int i = 0; i < count; i++)
     {
+        if (strlen(rooms[i].status_end) == 0)
+        {
+            strcpy(rooms[i].status_end, "-");
+        }
+        if (strlen(rooms[i].status_start) == 0)
+        {
+            strcpy(rooms[i].status_start, "-");
+        }
+        if (strlen(rooms[i].guest) == 0)
+        {
+            strcpy(rooms[i].guest, "-");
+        }
+    }
+    for (int i = 0; i < count; i++)
+    {
         fprintf(fp, "%d,%s,%s,%s,%s,%s\n",
                 rooms[i].room_number, rooms[i].room_type,
-                rooms[i].status, rooms[i].guest,rooms[i].status_start,rooms[i].status_end);
+                rooms[i].status, rooms[i].guest, rooms[i].status_start, rooms[i].status_end);
     }
     fclose(fp);
 }
