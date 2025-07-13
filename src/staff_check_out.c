@@ -4,15 +4,16 @@
 #include <time.h>
 #include "staff_check_out.h"
 
-
 // Parse date string "YYYY-MM-DD" into struct tm
-int parse_date_co(const char *date_str, struct tm *date) {
+int parse_date_co(const char *date_str, struct tm *date)
+{
     return sscanf(date_str, "%4d-%2d-%2d",
                   &date->tm_year, &date->tm_mon, &date->tm_mday) == 3;
 }
 
 // Compare two dates (struct tm), return days difference (date2 - date1)
-int days_diff(struct tm date1, struct tm date2) {
+int days_diff(struct tm date1, struct tm date2)
+{
     time_t t1 = mktime(&date1);
     time_t t2 = mktime(&date2);
     double diff = difftime(t2, t1);
@@ -20,25 +21,31 @@ int days_diff(struct tm date1, struct tm date2) {
 }
 
 // Load promocodes from CSV into array, return count
-int load_promocodes(PromoCode promos[]) {
+int load_promocodes(PromoCode promos[])
+{
     FILE *fp = fopen(PROMO_FILE, "r");
-    if (!fp) return 0;
+    if (!fp)
+        return 0;
 
     char line[MAX_LINE];
     int count = 0;
     // skip header
     fgets(line, sizeof(line), fp);
-    while (fgets(line, sizeof(line), fp) && count < MAX_PROMO) {
+    while (fgets(line, sizeof(line), fp) && count < MAX_PROMO)
+    {
         char *token = strtok(line, ",");
-        if (!token) continue;
+        if (!token)
+            continue;
         strcpy(promos[count].code, token);
 
         token = strtok(NULL, ",");
-        if (!token) continue;
+        if (!token)
+            continue;
         promos[count].discount = atoi(token);
 
         token = strtok(NULL, ",\n");
-        if (!token) continue;
+        if (!token)
+            continue;
         strcpy(promos[count].expiry, token);
 
         count++;
@@ -48,11 +55,14 @@ int load_promocodes(PromoCode promos[]) {
 }
 
 // Check if promo code is valid & not expired, return discount % or 0
-int check_promocode(const char *input_code, PromoCode promos[], int promo_count) {
+int check_promocode(const char *input_code, PromoCode promos[], int promo_count)
+{
     time_t now = time(NULL);
     struct tm today = *localtime(&now);
-    for (int i = 0; i < promo_count; i++) {
-        if (strcasecmp(input_code, promos[i].code) == 0) {
+    for (int i = 0; i < promo_count; i++)
+    {
+        if (strcasecmp(input_code, promos[i].code) == 0)
+        {
             struct tm expiry_date = {0};
             if (!parse_date_co(promos[i].expiry, &expiry_date))
                 return 0; // invalid expiry date in file
@@ -61,9 +71,12 @@ int check_promocode(const char *input_code, PromoCode promos[], int promo_count)
             expiry_date.tm_isdst = -1;
 
             time_t exp_time = mktime(&expiry_date);
-            if (difftime(exp_time, now) >= 0) {
+            if (difftime(exp_time, now) >= 0)
+            {
                 return promos[i].discount;
-            } else {
+            }
+            else
+            {
                 printf("================================================================================\n");
                 printf("                      Promo code '%s' is expired.                               \n", input_code);
                 printf("================================================================================\n");
@@ -78,29 +91,55 @@ int check_promocode(const char *input_code, PromoCode promos[], int promo_count)
 }
 
 // Update rooms.csv to set status "Free" and guest "-" for checked-out rooms
-void update_room_status_co(int room_number) {
+void update_room_status_co(int room_number)
+{
     FILE *fp = fopen(ROOMS_FILE, "r");
     FILE *temp = fopen("rooms_temp.csv", "w");
-    if (!fp || !temp) {
+    if (!fp || !temp)
+    {
         printf("================================================================================\n");
         printf("                      Error opening room files.                                 \n");
         printf("================================================================================\n");
-        if (fp) fclose(fp);
-        if (temp) fclose(temp);
+        if (fp)
+            fclose(fp);
+        if (temp)
+            fclose(temp);
         return;
     }
 
     char line[MAX_LINE];
-    while (fgets(line, sizeof(line), fp)) {
-        int rn;
-        char rtype[20], status[20], guest[100];
-        sscanf(line, "%d,%19[^,],%19[^,],%99[^\n]", &rn, rtype, status, guest);
-
-        if (rn == room_number) {
-            strcpy(status, "Free");
-            strcpy(guest, "-");
+    while (fgets(line, sizeof(line), fp))
+    {
+        char *tokens[7]; // adjust if you have more columns
+        int i = 0;
+        char *token = strtok(line, ",\n");
+        while (token && i < 7)
+        {
+            tokens[i++] = token;
+            token = strtok(NULL, ",\n");
         }
-        fprintf(temp, "%d,%s,%s,%s\n", rn, rtype, status, guest);
+
+        if (i >= 4)
+        {
+            int rn = atoi(tokens[0]);
+            if (rn == room_number)
+            {
+                strcpy(tokens[2], "Free"); // status
+                strcpy(tokens[3], "-");    // guest
+                strcpy(tokens[4], "-");
+                strcpy(tokens[5], "-");
+                strcpy(tokens[6], "-");
+            }
+        }
+
+        // Write back the updated line
+        for (int j = 0; j < i; j++)
+        {
+            fprintf(temp, "%s", tokens[j]);
+            if (j < i - 1)
+                fprintf(temp, ",");
+        }
+        fprintf(temp, "\n");
     }
 
     fclose(fp);
@@ -111,30 +150,38 @@ void update_room_status_co(int room_number) {
 }
 
 // Delete bookings by booking IDs
-void delete_bookings(int booking_ids[], int count) {
+void delete_bookings(int booking_ids[], int count)
+{
     FILE *fp = fopen(BOOKINGS_FILE, "r");
     FILE *temp = fopen("bookings_temp.csv", "w");
-    if (!fp || !temp) {
+    if (!fp || !temp)
+    {
         printf("================================================================================\n");
         printf("                      Error opening booking files.                              \n");
         printf("================================================================================\n");
-        if (fp) fclose(fp);
-        if (temp) fclose(temp);
+        if (fp)
+            fclose(fp);
+        if (temp)
+            fclose(temp);
         return;
     }
 
     char line[MAX_LINE];
-    while (fgets(line, sizeof(line), fp)) {
+    while (fgets(line, sizeof(line), fp))
+    {
         int bid = -1;
         sscanf(line, "%*d,%*[^,],%*[^,],%*[^,],%d,%*f,%*f", &bid);
         int keep = 1;
-        for (int i = 0; i < count; i++) {
-            if (bid == booking_ids[i]) {
+        for (int i = 0; i < count; i++)
+        {
+            if (bid == booking_ids[i])
+            {
                 keep = 0; // delete this booking
                 break;
             }
         }
-        if (keep) fputs(line, temp);
+        if (keep)
+            fputs(line, temp);
     }
     fclose(fp);
     fclose(temp);
@@ -143,7 +190,8 @@ void delete_bookings(int booking_ids[], int count) {
     rename("bookings_temp.csv", BOOKINGS_FILE);
 }
 
-int staffCheckOut() {
+int staffCheckOut()
+{
     printf("================================================================================\n");
     printf("                              === Staff Check-out ===                           \n");
     printf("================================================================================\n");
@@ -155,7 +203,8 @@ int staffCheckOut() {
 
     // Load all bookings for guest
     FILE *fp = fopen(BOOKINGS_FILE, "r");
-    if (!fp) {
+    if (!fp)
+    {
         printf("================================================================================\n");
         printf("                              No bookings found.                               \n");
         printf("================================================================================\n");
@@ -165,14 +214,16 @@ int staffCheckOut() {
     BookingSCheckOUT bookings[MAX_BOOKINGS];
     int count = 0;
     char line[MAX_LINE];
-    while (fgets(line, sizeof(line), fp) && count < MAX_BOOKINGS) {
+    while (fgets(line, sizeof(line), fp) && count < MAX_BOOKINGS)
+    {
         int rn, bid;
         char name[100], ci[11], co[11];
         float total, upfront;
         sscanf(line, "%d,%99[^,],%10[^,],%10[^,],%d,%f,%f",
                &rn, name, ci, co, &bid, &total, &upfront);
 
-        if (strcmp(name, guest_name) == 0) {
+        if (strcmp(name, guest_name) == 0)
+        {
             bookings[count].room_number = rn;
             strcpy(bookings[count].guest_name, name);
             strcpy(bookings[count].checkin, ci);
@@ -185,7 +236,8 @@ int staffCheckOut() {
     }
     fclose(fp);
 
-    if (count == 0) {
+    if (count == 0)
+    {
         printf("================================================================================\n");
         printf("                    No bookings found for guest '%s'.                          \n", guest_name);
         printf("================================================================================\n");
@@ -195,7 +247,8 @@ int staffCheckOut() {
     printf("================================================================================\n");
     printf("                    Found %d booking(s) for '%s':                               \n", count, guest_name);
     printf("================================================================================\n");
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++)
+    {
         printf(" %d) Room %d: Check-in %s, Check-out %s, Booking ID: %d, Total: $%.2f, Upfront Paid: $%.2f\n",
                i + 1,
                bookings[i].room_number,
@@ -211,23 +264,29 @@ int staffCheckOut() {
     printf("================================================================================\n");
     char input[100];
     fgets(input, sizeof(input), stdin);
-
+    input[strcspn(input, "\n")] = 0;
     int selected_ids[MAX_BOOKINGS];
     int selected_count = 0;
 
     char *token = strtok(input, ",");
-    while (token) {
+    while (token)
+    {
         int idx = atoi(token) - 1;
-        if (idx >= 0 && idx < count) {
+        // printf("count: %d", count);
+        if (idx >= 0 && idx < count)
+        {
             selected_ids[selected_count++] = bookings[idx].booking_id;
-        } else {
+        }
+        else
+        {
             printf("================================================================================\n");
             printf("                          Invalid selection: %s                                \n", token);
             printf("================================================================================\n");
         }
         token = strtok(NULL, ",");
     }
-    if (selected_count == 0) {
+    if (selected_count == 0)
+    {
         printf("================================================================================\n");
         printf("                        No valid bookings selected. Aborting.                   \n");
         printf("================================================================================\n");
@@ -246,13 +305,17 @@ int staffCheckOut() {
     printf("================================================================================\n");
     fgets(promo_input, sizeof(promo_input), stdin);
     promo_input[strcspn(promo_input, "\n")] = 0;
-    if (strlen(promo_input) > 0) {
+    if (strlen(promo_input) > 0)
+    {
         discount = check_promocode(promo_input, promos, promo_count);
-        if (discount > 0) {
+        if (discount > 0)
+        {
             printf("================================================================================\n");
             printf("                          Promo code applied! Discount: %d%%                   \n", discount);
             printf("================================================================================\n");
-        } else {
+        }
+        else
+        {
             printf("================================================================================\n");
             printf("                          No discount applied.                                \n");
             printf("================================================================================\n");
@@ -267,16 +330,23 @@ int staffCheckOut() {
     printf("                               === CHECKOUT RECEIPT ===                         \n");
     printf("================================================================================\n");
     float grand_total = 0.0f;
-    for (int i = 0; i < selected_count; i++) {
-        // Find booking struct by booking_id
-        BookingSCheckOUT *b = NULL;
-        for (int j = 0; j < count; j++) {
-            if (bookings[j].booking_id == selected_ids[i]) {
-                b = &bookings[j];
+
+    // Loop over all bookings
+    for (int j = 0; j < count; j++)
+    {
+        int matched = 0;
+        for (int i = 0; i < selected_count; i++)
+        {
+            if (bookings[j].booking_id == selected_ids[i])
+            {
+                matched = 1;
                 break;
             }
         }
-        if (!b) continue;
+        if (!matched)
+            continue;
+
+        BookingSCheckOUT *b = &bookings[j];
 
         // Calculate remaining payment = total_price - upfront_paid
         float remaining = b->total_price - b->upfront_paid;
@@ -288,20 +358,21 @@ int staffCheckOut() {
         co_date.tm_mon -= 1;
         co_date.tm_isdst = -1;
         int late_days = days_diff(co_date, today);
-        if (late_days > 0) {
+        if (late_days > 0)
+        {
             printf("================================================================================\n");
             printf("                 Note: Late checkout by %d day(s) for room %d.                 \n", late_days, b->room_number);
             printf("================================================================================\n");
-            float late_fee = late_days * 20.0f; // e.g. $20 per extra day
+            float late_fee = late_days * 20.0f;
             printf("================================================================================\n");
             printf("                           Late fee added: $%.2f                               \n", late_fee);
             printf("================================================================================\n");
             remaining += late_fee;
         }
 
-        // Apply promo discount on remaining
         float discount_amount = 0.0f;
-        if (discount > 0) {
+        if (discount > 0)
+        {
             discount_amount = remaining * discount / 100.0f;
             remaining -= discount_amount;
         }
@@ -316,30 +387,41 @@ int staffCheckOut() {
         printf("Total Price: $%.2f\n", b->total_price);
         printf("Upfront Paid: $%.2f\n", b->upfront_paid);
         printf("Remaining Due: $%.2f\n", remaining);
-        if (discount > 0) {
+        if (discount > 0)
+        {
             printf("Discount Applied: %d%% ($%.2f)\n", discount, discount_amount);
         }
-        if (late_days > 0) {
+        if (late_days > 0)
+        {
             printf("Late Checkout Fee: %d day(s) x $20 = $%.2f\n", late_days, late_days * 20.0f);
         }
     }
+
     printf("--------------------------------------------------------------------------------\n");
     printf("GRAND TOTAL DUE: $%.2f\n", grand_total);
     printf("================================================================================\n");
     printf("                               === Thank you! ===                               \n");
     printf("================================================================================\n");
 
-    // Delete bookings & update rooms
-    delete_bookings(selected_ids, selected_count);
-    for (int i = 0; i < selected_count; i++) {
-        // Find booking room number to update room status
-        for (int j = 0; j < count; j++) {
-            if (bookings[j].booking_id == selected_ids[i]) {
-                update_room_status_co(bookings[j].room_number);
+    // ========== ROOM STATUS UPDATE (FIXED) ==========
+    for (int j = 0; j < count; j++)
+    {
+        int matched = 0;
+        for (int i = 0; i < selected_count; i++)
+        {
+            if (bookings[j].booking_id == selected_ids[i])
+            {
+                matched = 1;
                 break;
             }
         }
+        if (matched)
+        {
+            update_room_status_co(bookings[j].room_number);
+        }
     }
 
+    // ========== DELETE BOOKINGS ==========
+    delete_bookings(selected_ids, selected_count);
     return 0;
 }

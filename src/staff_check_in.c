@@ -296,8 +296,10 @@ int load_room_status(RoomStatusSCheckIn rooms[], int max)
         // Fill missing fields with "-"
         if (fields < 6)
         {
-            if (fields < 5) strcpy(r.status_start, "-");
-            if (fields < 6) strcpy(r.status_end, "-");
+            if (fields < 5)
+                strcpy(r.status_start, "-");
+            if (fields < 6)
+                strcpy(r.status_end, "-");
         }
 
         rooms[count++] = r;
@@ -306,7 +308,6 @@ int load_room_status(RoomStatusSCheckIn rooms[], int max)
     fclose(fp);
     return count;
 }
-
 
 void save_room_status(RoomStatusSCheckIn rooms[], int count)
 {
@@ -319,6 +320,8 @@ void save_room_status(RoomStatusSCheckIn rooms[], int count)
 
     for (int i = 0; i < count; i++)
     {
+        if (rooms[i].room_number == 0)
+            continue; // skip invalid room slots
         // Ensure all string fields are valid
         if (strlen(rooms[i].status) == 0)
             strcpy(rooms[i].status, "-");
@@ -341,7 +344,6 @@ void save_room_status(RoomStatusSCheckIn rooms[], int count)
 
     fclose(fp);
 }
-
 
 int generate_booking_id()
 {
@@ -380,55 +382,48 @@ int assign_rooms(RoomStatusSCheckIn rooms[], int room_count, int single_req, int
     snprintf(checkin_date, sizeof(checkin_date), "%04d-%02d-%02d", checkin_year, checkin_month, checkin_day);
     snprintf(checkout_date, sizeof(checkout_date), "%04d-%02d-%02d", checkout_year, checkout_month, checkout_day);
 
-    for (int floor = 1; floor <= 9 && (single_left > 0 || double_left > 0); floor++)
+    for (int i = 0; i < room_count && (single_left > 0 || double_left > 0); i++)
     {
-        for (int i = 0; i < 10; i++)
+        if (rooms[i].room_number == 0 || strcmp(rooms[i].status, "Free") != 0)
+            continue;
+
+        if (single_left > 0 && strcmp(rooms[i].room_type, "Single") == 0)
         {
-            int idx = (floor - 1) * 10 + i;
-            if (idx >= room_count)
-                break;
-            if (single_left > 0 && i <= 4 && strcmp(rooms[idx].status, "Free") == 0)
-            {
-                rooms[idx].status[0] = 0;
-                strcpy(rooms[idx].status, "Occupied");
-                strcpy(rooms[idx].guest, guest_name);
+            strcpy(rooms[i].status, "Occupied");
+            strcpy(rooms[i].guest, guest_name);
 
-                BookingSCheckIn b;
-                b.room_number = rooms[idx].room_number;
-                strcpy(b.guest, guest_name);
-                strcpy(b.checkin_date, checkin_date);
-                strcpy(b.checkout_date, checkout_date);
-                b.booking_id = booking_id;
-                b.total_price = 50.0f * (checkout_day - checkin_day);
-                b.upfront_payment = b.total_price * 0.4f;
+            BookingSCheckIn b;
+            b.room_number = rooms[i].room_number;
+            strcpy(b.guest, guest_name);
+            strcpy(b.checkin_date, checkin_date);
+            strcpy(b.checkout_date, checkout_date);
+            b.booking_id = booking_id;
+            b.total_price = 50.0f * (checkout_day - checkin_day);
+            b.upfront_payment = b.total_price * 0.4f;
 
-                bookings[(*booking_count)++] = b;
+            bookings[*booking_count] = b;
+            (*booking_count)++;
+            single_left--;
+            assigned++;
+        }
+        else if (double_left > 0 && strcmp(rooms[i].room_type, "Double") == 0)
+        {
+            strcpy(rooms[i].status, "Occupied");
+            strcpy(rooms[i].guest, guest_name);
 
-                single_left--;
-                assigned++;
-            }
-            else if (double_left > 0 && i >= 5 && strcmp(rooms[idx].status, "Free") == 0)
-            {
-                rooms[idx].status[0] = 0;
-                strcpy(rooms[idx].status, "Occupied");
-                strcpy(rooms[idx].guest, guest_name);
+            BookingSCheckIn b;
+            b.room_number = rooms[i].room_number;
+            strcpy(b.guest, guest_name);
+            strcpy(b.checkin_date, checkin_date);
+            strcpy(b.checkout_date, checkout_date);
+            b.booking_id = booking_id;
+            b.total_price = 75.0f * (checkout_day - checkin_day);
+            b.upfront_payment = b.total_price * 0.4f;
 
-                BookingSCheckIn b;
-                b.room_number = rooms[idx].room_number;
-                strcpy(b.guest, guest_name);
-                strcpy(b.checkin_date, checkin_date);
-                strcpy(b.checkout_date, checkout_date);
-                b.booking_id = booking_id;
-                b.total_price = 75.0f * (checkout_day - checkin_day);
-                b.upfront_payment = b.total_price * 0.4f;
-
-                bookings[(*booking_count)++] = b;
-
-                double_left--;
-                assigned++;
-            }
-            if (single_left == 0 && double_left == 0)
-                break;
+            bookings[*booking_count] = b;
+            (*booking_count)++;
+            double_left--;
+            assigned++;
         }
     }
     return assigned;

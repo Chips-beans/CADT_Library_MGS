@@ -19,7 +19,7 @@ void updateRoomStatus(const char *filename, int targetRoomID, const char *newSta
     while (fgets(line, sizeof(line), fp)) {
         if (sscanf(line, "%d,%19[^,],%9[^,],%9[^\n]", &roomID, type, status, note) == 4) {
             if (roomID == targetRoomID) {
-                fprintf(temp, "%d,%s,%s,%s\n", roomID, type, newStatus, note);
+                fprintf(temp, "%d,%s,%s,%s,%s,%s\n", roomID, type, newStatus, note, "-", "-");
             } else {
                 fputs(line, temp);
             }
