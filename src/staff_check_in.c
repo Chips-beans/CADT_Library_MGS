@@ -283,22 +283,30 @@ int load_room_status(RoomStatusSCheckIn rooms[], int max)
         printf("Failed to open %s\n", ROOM_STATUS_FILE);
         return 0;
     }
+
     int count = 0;
     char line[256];
 
     while (fgets(line, sizeof(line), fp) && count < max)
     {
         RoomStatusSCheckIn r;
-        int fields = sscanf(line, "%d,%9[^,],%19[^,],%[^,]",
-                            &r.room_number, r.room_type, r.status, r.guest);
-        if (fields == 4)
+        int fields = sscanf(line, "%d,%9[^,],%19[^,],%49[^,],%19[^,],%19[^,\n]",
+                            &r.room_number, r.room_type, r.status, r.guest, r.status_start, r.status_end);
+
+        // Fill missing fields with "-"
+        if (fields < 6)
         {
-            rooms[count++] = r;
+            if (fields < 5) strcpy(r.status_start, "-");
+            if (fields < 6) strcpy(r.status_end, "-");
         }
+
+        rooms[count++] = r;
     }
+
     fclose(fp);
     return count;
 }
+
 
 void save_room_status(RoomStatusSCheckIn rooms[], int count)
 {
@@ -308,29 +316,32 @@ void save_room_status(RoomStatusSCheckIn rooms[], int count)
         printf("Error writing room status file.\n");
         return;
     }
+
     for (int i = 0; i < count; i++)
     {
-        if (strlen(rooms[i].status_end) == 0)
-        {
-            strcpy(rooms[i].status_end, "-");
-        }
-        if (strlen(rooms[i].status_start) == 0)
-        {
-            strcpy(rooms[i].status_start, "-");
-        }
+        // Ensure all string fields are valid
+        if (strlen(rooms[i].status) == 0)
+            strcpy(rooms[i].status, "-");
         if (strlen(rooms[i].guest) == 0)
-        {
             strcpy(rooms[i].guest, "-");
-        }
-    }
-    for (int i = 0; i < count; i++)
-    {
+        if (strlen(rooms[i].status_start) == 0)
+            strcpy(rooms[i].status_start, "-");
+        if (strlen(rooms[i].status_end) == 0)
+            strcpy(rooms[i].status_end, "-");
+
+        // Always write 6 fields
         fprintf(fp, "%d,%s,%s,%s,%s,%s\n",
-                rooms[i].room_number, rooms[i].room_type,
-                rooms[i].status, rooms[i].guest, rooms[i].status_start, rooms[i].status_end);
+                rooms[i].room_number,
+                rooms[i].room_type,
+                rooms[i].status,
+                rooms[i].guest,
+                rooms[i].status_start,
+                rooms[i].status_end);
     }
+
     fclose(fp);
 }
+
 
 int generate_booking_id()
 {
