@@ -1,11 +1,11 @@
-100,Single,Occupied,Chhim Soksambath,-,-
-101,Single,Occupied,Chhim Soksambath,-,-
+100,Single,Booked,Chhim Sok,-,-
+101,Single,Booked,Chhim Sok,-,-
 102,Single,Occupied,Chhim Soksambath,-,-
 103,Single,Free,-,-,-
 104,Single,Free,-,-,-
-105,Double,Occupied,Chhim Soksambath,-,-
-106,Double,Occupied,Chhim Soksambath,-,-
-107,Double,Free,-,-,-
+105,Double,Booked,Chhim Sok,-,-
+106,Double,Booked,Chhim Sok,-,-
+107,Double,Booked,-,-,-,-,-
 108,Double,Free,-,-,-
 109,Double,Free,-,-,-
 200,Single,Free,-,-,-
